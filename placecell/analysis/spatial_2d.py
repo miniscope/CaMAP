@@ -43,6 +43,40 @@ def gaussian_filter_normalized(
     return smoothed / norm
 
 
+def _draw_shift(rng: np.random.RandomState, n_frames: int, min_shift_frames: int) -> int:
+    """Draw a circular-shift offset for a shuffle iteration."""
+    if min_shift_frames > 0:
+        return int(rng.randint(min_shift_frames, n_frames - min_shift_frames))
+    return int(rng.randint(1, n_frames))
+
+
+def _shuffled_rate_map(
+    traj_x: np.ndarray,
+    traj_y: np.ndarray,
+    weights: np.ndarray,
+    x_edges: np.ndarray,
+    y_edges: np.ndarray,
+    occ_for_division: np.ndarray,
+    valid_mask: np.ndarray,
+    spatial_sigma: float,
+) -> np.ndarray:
+    """One shuffle iteration: histogram weighted events, optionally smooth
+    the numerator, divide by ``occ_for_division`` on ``valid_mask``.
+
+    ``occ_for_division`` is the loop-invariant denominator the caller has
+    already prepared — typically ``gaussian_filter_normalized(occ, sigma)``
+    when smoothing, or raw ``occupancy_time`` when ``spatial_sigma == 0``.
+    """
+    event_weights, _, _ = np.histogram2d(
+        traj_x, traj_y, bins=[x_edges, y_edges], weights=weights,
+    )
+    if spatial_sigma > 0:
+        event_weights = gaussian_filter_normalized(event_weights, sigma=spatial_sigma)
+    rate = np.zeros_like(occ_for_division)
+    rate[valid_mask] = event_weights[valid_mask] / occ_for_division[valid_mask]
+    return rate
+
+
 def compute_occupancy_map(
     trajectory_df: pd.DataFrame,
     bins: int,
@@ -85,11 +119,6 @@ def compute_occupancy_map(
     )
     occupancy_time = occupancy_counts * time_per_frame
 
-    # valid_mask is derived from smoothed occupancy so that bins with a
-    # few noisy frames at the edge aren't disqualified. ``occupancy_time``
-    # itself is returned RAW — downstream analyses (rate map, SI, shuffle
-    # percentile) smooth it independently, and double-smoothing upstream
-    # would widen the effective kernel to sigma·sqrt(2).
     if spatial_sigma > 0:
         occ_for_mask = gaussian_filter_normalized(occupancy_time, sigma=spatial_sigma)
     else:
@@ -144,7 +173,7 @@ def compute_rate_map(
         bins=[x_edges, y_edges],
         weights=unit_events["s"],
     )
-    # Smooth numerator and denominator independently (Skaggs et al. 1996)
+    # Smooth numerator and denominator independently (Skaggs 1996).
     event_smooth = gaussian_filter_normalized(event_weights, sigma=spatial_sigma)
     occ_smooth = gaussian_filter_normalized(occupancy_time, sigma=spatial_sigma)
     rate_map_smoothed = np.zeros_like(occupancy_time)
@@ -228,8 +257,8 @@ def compute_spatial_information(
         weights=weights,
     )
 
-    # Smooth numerator and denominator independently (Skaggs et al. 1996).
-    # occ_smooth is loop-invariant and is reused inside the shuffle loop below.
+    # Smooth numerator and denominator independently (Skaggs 1996).
+    # occ_smooth is loop-invariant; reused inside the shuffle loop below.
     if spatial_sigma > 0:
         occ_smooth = gaussian_filter_normalized(occupancy_time, sigma=spatial_sigma)
         event_smooth = gaussian_filter_normalized(event_weights, sigma=spatial_sigma)
@@ -275,41 +304,25 @@ def compute_spatial_information(
     if min_shift_frames >= n_frames // 2:
         min_shift_frames = 0
 
-    shuffled_sis = []
-    for _ in range(n_shuffles):
-        if min_shift_frames > 0:
-            shift = rng.randint(min_shift_frames, n_frames - min_shift_frames)
-        else:
-            shift = rng.randint(1, n_frames)
-        s_shuffled = np.roll(aligned_events, shift)
+    traj_x = trajectory_df["x"].values
+    traj_y = trajectory_df["y"].values
+    occ_for_division = occ_smooth if spatial_sigma > 0 else occupancy_time
 
-        event_w_shuf, _, _ = np.histogram2d(
-            trajectory_df["x"],
-            trajectory_df["y"],
-            bins=[x_edges, y_edges],
-            weights=s_shuffled,
+    shuffled_sis = np.empty(n_shuffles)
+    for i in range(n_shuffles):
+        s_shuffled = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
+        rate_shuf = _shuffled_rate_map(
+            traj_x, traj_y, s_shuffled, x_edges, y_edges,
+            occ_for_division, valid_mask, spatial_sigma,
         )
-
-        # Smooth numerator only; occ_smooth was hoisted out of the loop above.
-        if spatial_sigma > 0:
-            event_smooth = gaussian_filter_normalized(event_w_shuf, sigma=spatial_sigma)
-            rate_shuf = np.zeros_like(occupancy_time)
-            rate_shuf[valid_mask] = event_smooth[valid_mask] / occ_smooth[valid_mask]
-        else:
-            rate_shuf = np.zeros_like(occupancy_time)
-            rate_shuf[valid_mask] = event_w_shuf[valid_mask] / occupancy_time[valid_mask]
-
-        # Use smoothed overall rate for each shuffle (consistent SI)
         shuf_lambda = np.sum(rate_shuf[valid_mask] * occupancy_time[valid_mask]) / total_time
         valid_s = (rate_shuf > 0) & valid_mask & (shuf_lambda > 0)
         if np.any(valid_s) and shuf_lambda > 0:
             ratio_s = rate_shuf[valid_s] / shuf_lambda
-            si_shuf = np.sum(P_i[valid_s] * ratio_s * np.log2(ratio_s))
+            shuffled_sis[i] = np.sum(P_i[valid_s] * ratio_s * np.log2(ratio_s))
         else:
-            si_shuf = 0.0
-        shuffled_sis.append(si_shuf)
+            shuffled_sis[i] = 0.0
 
-    shuffled_sis = np.array(shuffled_sis)
     p_val = (np.sum(shuffled_sis >= actual_si) + 1) / (n_shuffles + 1)
 
     return actual_si, p_val, shuffled_sis
@@ -399,35 +412,17 @@ def compute_shuffled_rate_percentile(
     traj_y = trajectory_df["y"].values
 
     shuffled_rates = np.zeros((n_shuffles, *occupancy_time.shape))
-
-    # Smoothed occupancy is loop-invariant.
     occ_smooth = gaussian_filter_normalized(occupancy_time, sigma=spatial_sigma)
 
     for i in range(n_shuffles):
-        if min_shift_frames > 0:
-            shift = rng.randint(min_shift_frames, n_frames - min_shift_frames)
-        else:
-            shift = rng.randint(1, n_frames)
-        s_shuffled = np.roll(aligned_events, shift)
-
-        event_w_shuf, _, _ = np.histogram2d(
-            traj_x,
-            traj_y,
-            bins=[x_edges, y_edges],
-            weights=s_shuffled,
+        s_shuffled = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
+        rate_shuf = _shuffled_rate_map(
+            traj_x, traj_y, s_shuffled, x_edges, y_edges,
+            occ_smooth, valid_mask, spatial_sigma,
         )
-        # Smooth numerator only; occ_smooth was hoisted out of the loop above.
-        event_smooth = gaussian_filter_normalized(event_w_shuf, sigma=spatial_sigma)
-        rate_shuf_smooth = np.zeros_like(occupancy_time)
-        rate_shuf_smooth[valid_mask] = event_smooth[valid_mask] / occ_smooth[valid_mask]
-        # Keep rate_shuf_smooth in firing-rate units (events·s⁻¹/bin).
-        # Per-shuffle peak normalization would distort the null
-        # distribution: a shuffle that happens to produce one very hot
-        # bin would then look quiet everywhere else, pushing the 95th
-        # percentile down and making seed detection anti-conservative.
-        rate_shuf_smooth[~valid_mask] = 0
-
-        shuffled_rates[i] = rate_shuf_smooth
+        # Don't peak-normalize per shuffle: a single hot bin would push the
+        # rest down and make the 95th-percentile floor anti-conservative.
+        shuffled_rates[i] = rate_shuf
 
     return np.percentile(shuffled_rates, percentile, axis=0)
 
@@ -552,16 +547,10 @@ def compute_stability_score(
     events_first = unit_events[events_first_mask]
     events_second = unit_events[events_second_mask]
 
-    # Compute occupancy maps for each half
     time_per_frame = 1.0 / behavior_fps
 
     def compute_half_occupancy(traj_half: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
-        """Return raw half-occupancy and a smoothed-occupancy validity mask.
-
-        The mask is derived from smoothed occupancy so noisy edge bins are
-        excluded, but the rate-map and shuffle paths apply Skaggs (1996)
-        single smoothing to the raw occupancy.
-        """
+        """Return raw half-occupancy and a smoothed-occupancy validity mask."""
         if traj_half.empty:
             occ = np.zeros_like(occupancy_time)
             mask = np.zeros_like(valid_mask, dtype=bool)
@@ -590,7 +579,7 @@ def compute_stability_score(
             weights=events["s"],
         )
 
-        # Smooth numerator and denominator independently
+        # Smooth numerator and denominator independently (Skaggs 1996).
         event_smooth = gaussian_filter_normalized(event_weights, sigma=spatial_sigma)
         occ_smooth_half = gaussian_filter_normalized(occ, sigma=spatial_sigma)
         rate_map_smoothed = np.zeros_like(occ)
@@ -619,21 +608,14 @@ def compute_stability_score(
     # Pearson correlation
     corr = np.corrcoef(vals_first, vals_second)[0, 1]
 
-    # Fisher z-transform: z = 0.5 * ln((1+r)/(1-r)) = arctanh(r)
+    # Clip before arctanh: r=±1 maps to ±inf otherwise.
     corr_clipped = np.clip(corr, -0.9999, 0.9999)
     fisher_z = np.arctanh(corr_clipped)
 
-    # Half rate maps are returned unnormalized (in firing-rate units).
-    # Display code should normalize all three maps (first, second, full)
-    # to a shared scale for honest visual comparison.
-
-    # Shuffle-based stability significance test
     if n_shuffles > 0:
-        # Offset seed so stability shuffles are independent of SI shuffles,
-        # and also vary with n_split_blocks so that multiple stability
-        # tests on the same unit draw *different* shuffle sequences
-        # rather than replaying identical shifts against different block
-        # structures (which would produce highly correlated null p-values).
+        # Seed offset gives an independent stream per (SI vs stability) and per
+        # n_split_blocks; without the latter, multi-split tests on one unit
+        # would replay identical shifts and produce correlated null p-values.
         if random_seed is not None:
             stab_seed = random_seed + 224737 + 7919 * n_split_blocks
         else:
@@ -646,6 +628,12 @@ def compute_stability_score(
 
         traj_x = trajectory_df["x"].values
         traj_y = trajectory_df["y"].values
+        # Loop-invariant: hoist masked trajectory subsets and smoothed occupancies.
+        traj_x_first, traj_y_first = traj_x[traj_first_mask], traj_y[traj_first_mask]
+        traj_x_second, traj_y_second = traj_x[traj_second_mask], traj_y[traj_second_mask]
+        os1 = gaussian_filter_normalized(occ_first, sigma=spatial_sigma)
+        os2 = gaussian_filter_normalized(occ_second, sigma=spatial_sigma)
+        bv = valid_first & valid_second
 
         n_frames = len(aligned_events)
         min_shift_frames = int(min_shift_seconds * behavior_fps)
@@ -654,39 +642,18 @@ def compute_stability_score(
         if min_shift_frames >= n_frames // 2:
             min_shift_frames = 0
 
-        # Smoothed half-occupancies are loop-invariant.
-        os1 = gaussian_filter_normalized(occ_first, sigma=spatial_sigma)
-        os2 = gaussian_filter_normalized(occ_second, sigma=spatial_sigma)
-
         shuffled_corrs = np.empty(n_shuffles)
         for i in range(n_shuffles):
-            if min_shift_frames > 0:
-                shift = rng.randint(min_shift_frames, n_frames - min_shift_frames)
-            else:
-                shift = rng.randint(1, n_frames)
-            shifted = np.roll(aligned_events, shift)
-
-            ew1, _, _ = np.histogram2d(
-                traj_x[traj_first_mask],
-                traj_y[traj_first_mask],
-                bins=[x_edges, y_edges],
-                weights=shifted[traj_first_mask],
+            shifted = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
+            rm1 = _shuffled_rate_map(
+                traj_x_first, traj_y_first, shifted[traj_first_mask],
+                x_edges, y_edges, os1, valid_first, spatial_sigma,
             )
-            es1 = gaussian_filter_normalized(ew1, sigma=spatial_sigma)
-            rm1 = np.zeros_like(occ_first)
-            rm1[valid_first] = es1[valid_first] / os1[valid_first]
-
-            ew2, _, _ = np.histogram2d(
-                traj_x[traj_second_mask],
-                traj_y[traj_second_mask],
-                bins=[x_edges, y_edges],
-                weights=shifted[traj_second_mask],
+            rm2 = _shuffled_rate_map(
+                traj_x_second, traj_y_second, shifted[traj_second_mask],
+                x_edges, y_edges, os2, valid_second, spatial_sigma,
             )
-            es2 = gaussian_filter_normalized(ew2, sigma=spatial_sigma)
-            rm2 = np.zeros_like(occ_second)
-            rm2[valid_second] = es2[valid_second] / os2[valid_second]
 
-            bv = valid_first & valid_second
             if not np.any(bv):
                 shuffled_corrs[i] = 0.0
                 continue
@@ -718,6 +685,12 @@ def compute_unit_analysis(
     random_seed: int | None = None,
 ) -> dict:
     """Compute rate map, spatial information, stability, and thresholded events for a unit.
+
+    Units with fewer than ``scfg.min_events`` events skip the shuffle
+    tests and return ``p_val=1.0``: with very few events the shuffle null
+    is narrow enough that a single well-placed event can clear p<0.05 by
+    chance. Set ``min_events=0`` to disable the gate. Rate maps are still
+    returned for these units.
 
     Parameters
     ----------
@@ -751,11 +724,9 @@ def compute_unit_analysis(
         df_filtered[df_filtered["unit_id"] == unit_id] if not df_filtered.empty else pd.DataFrame()
     )
 
-    # Rate maps (two stored flavors; peak-normalized display map is a
-    # derived @property on UnitResult):
-    #   - rate_map_smoothed: smoothed, firing-rate units (events·s⁻¹/bin).
-    #     Authoritative map for quantitative analyses (SI, PVO, etc.).
-    #   - rate_map_raw: unsmoothed rate, used for overall-rate computation.
+    # rate_map_smoothed: firing-rate units, authoritative for SI/PVO/etc.
+    # rate_map_raw: unsmoothed, used for overall-rate computation below.
+    # (Peak-normalized display map is a derived @property on UnitResult.)
     rate_map_smoothed = compute_rate_map(
         unit_data,
         occupancy_time,
@@ -779,11 +750,6 @@ def compute_unit_analysis(
         overall_rate = 0.0
         event_count_rate = 0.0
 
-    # Minimum event-count gate. Below-threshold units get p_val=1 so the
-    # shuffle test cannot spuriously flag them: with very few events the
-    # null distribution is narrow enough that a single well-placed event
-    # can clear p<0.05 by chance. Rate maps are still returned for
-    # inspection. Gate of 0 disables the check (no gate).
     below_gate = scfg.min_events > 0 and len(unit_data) < scfg.min_events
 
     # Spatial information
@@ -815,7 +781,7 @@ def compute_unit_analysis(
         vis_threshold = 0.0
         events_above = unit_data
 
-    # Shuffled rate percentile for place field seed detection (Guo et al. 2023)
+    # Shuffled rate percentile for place field seed detection (Guo et al. 2023).
     shuffled_rate_p95 = compute_shuffled_rate_percentile(
         unit_data,
         trajectory_df,
@@ -832,10 +798,8 @@ def compute_unit_analysis(
         percentile=scfg.place_field_seed_percentile,
     )
 
-    # Stability tests — one per configured split. Half rate maps are
-    # stored in firing-rate units (events·s⁻¹/bin); display code
-    # normalizes at plot time so all three maps (first, second, full)
-    # can share a colorbar.
+    # One stability test per configured split; half rate maps stay in
+    # firing-rate units so display code can normalize them with the full map.
     stability_splits: list[dict] = []
     for n_splits in scfg.stability_splits:
         if below_gate:

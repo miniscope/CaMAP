@@ -32,6 +32,24 @@ package version is recorded separately in ``metadata.json`` and does
 not affect this number."""
 
 
+def _save_pdf(figures_dir: Path, name: str, builder: Any, saved: list[str]) -> None:
+    """Run a figure ``builder`` callable and save the result to ``figures_dir/name``.
+
+    Wraps the build/save in a broad ``except Exception``: by the time
+    figures are written the analysis bundle is already persisted, so a
+    plot failure should not abort the save or mask out other figures.
+    Successfully written names are appended to ``saved``.
+    """
+    try:
+        import matplotlib.pyplot as _plt
+        fig = builder()
+        fig.savefig(figures_dir / name, bbox_inches="tight")
+        _plt.close(fig)
+        saved.append(name)
+    except Exception:
+        logger.warning("Failed to save %s", name, exc_info=True)
+
+
 def unique_bundle_path(bundle_dir: str | Path, stem: str) -> Path:
     """Return a bundle path, appending ``_1``, ``_2``, ... if it already exists.
 
@@ -675,10 +693,13 @@ class BasePlaceCellDataset(abc.ABC):
         return path
 
     def _save_summary_figures(self, figures_dir: Path) -> list[str]:
-        """Generate and save key summary figures as PDFs into *figures_dir*."""
+        """Generate and save key summary figures as PDFs into *figures_dir*.
+
+        Per-figure failures are caught by :func:`_save_pdf` so a plot bug
+        cannot abort the bundle save once the analysis is persisted.
+        """
         try:
             import matplotlib
-            import matplotlib.pyplot as _plt
         except ImportError:
             logger.warning("matplotlib not available — skipping figure export")
             return []
@@ -700,54 +721,26 @@ class BasePlaceCellDataset(abc.ABC):
 
         with matplotlib.rc_context(rc):
             if self.unit_results:
-                for name, fn in [
-                    (
-                        "diagnostics.pdf",
-                        lambda: plot_diagnostics(
-                            self.unit_results, p_value_threshold=self.p_value_threshold
-                        ),
-                    ),
-                    (
-                        "summary_scatter.pdf",
-                        lambda: plot_summary_scatter(
-                            self.unit_results,
-                            p_value_threshold=self.p_value_threshold,
-                            n_shuffles=self._shuffle_n,
-                            min_shift_seconds=self._shuffle_shift,
-                        ),
-                    ),
-                    (
-                        "stability_splits.pdf",
-                        lambda: plot_stability_splits_summary(
-                            self.unit_results,
-                            p_value_threshold=self.p_value_threshold,
-                        ),
-                    ),
-                ]:
-                    try:
-                        fig = fn()
-                        fig.savefig(figures_dir / name, bbox_inches="tight")
-                        _plt.close(fig)
-                        saved.append(name)
-                    except Exception:
-                        logger.warning("Failed to save %s", name, exc_info=True)
+                _save_pdf(figures_dir, "diagnostics.pdf", lambda: plot_diagnostics(
+                    self.unit_results, p_value_threshold=self.p_value_threshold,
+                ), saved)
+                _save_pdf(figures_dir, "summary_scatter.pdf", lambda: plot_summary_scatter(
+                    self.unit_results,
+                    p_value_threshold=self.p_value_threshold,
+                    n_shuffles=self._shuffle_n,
+                    min_shift_seconds=self._shuffle_shift,
+                ), saved)
+                _save_pdf(figures_dir, "stability_splits.pdf",
+                    lambda: plot_stability_splits_summary(
+                        self.unit_results, p_value_threshold=self.p_value_threshold,
+                    ), saved)
 
-            try:
-                fig = plot_timestamp_diagnostics(self.trajectory_raw, self.canonical)
-                fig.savefig(figures_dir / "timestamp_diagnostics.pdf", bbox_inches="tight")
-                _plt.close(fig)
-                saved.append("timestamp_diagnostics.pdf")
-            except Exception:
-                logger.warning("Failed to save timestamp_diagnostics.pdf", exc_info=True)
+            _save_pdf(figures_dir, "timestamp_diagnostics.pdf",
+                lambda: plot_timestamp_diagnostics(self.trajectory_raw, self.canonical), saved)
 
             if self.max_proj is not None and self.footprints is not None:
-                try:
-                    fig = plot_footprints_filled(self.max_proj, self.footprints)
-                    fig.savefig(figures_dir / "footprints.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("footprints.pdf")
-                except Exception:
-                    logger.warning("Failed to save footprints.pdf", exc_info=True)
+                _save_pdf(figures_dir, "footprints.pdf",
+                    lambda: plot_footprints_filled(self.max_proj, self.footprints), saved)
 
         return saved
 
