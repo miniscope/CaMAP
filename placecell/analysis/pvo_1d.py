@@ -60,9 +60,19 @@ def _stack_rate_maps(
     return np.vstack(rate_maps), kept_ids
 
 
+_COSINE_MIN_VALID_UNITS = 2
+
+
 def _cosine_overlap(x: np.ndarray, y: np.ndarray) -> float:
+    """Cosine similarity between two population vectors (one component per unit).
+
+    Returns NaN when fewer than ``_COSINE_MIN_VALID_UNITS`` units are
+    jointly finite, or when either vector has zero norm. The unit floor
+    rules out the 1-unit case where cosine of two non-negative scalars
+    is deterministically 1.0 regardless of population structure.
+    """
     valid = np.isfinite(x) & np.isfinite(y)
-    if valid.sum() == 0:
+    if valid.sum() < _COSINE_MIN_VALID_UNITS:
         return np.nan
     xv = x[valid]
     yv = y[valid]

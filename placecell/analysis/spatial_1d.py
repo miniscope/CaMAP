@@ -353,6 +353,8 @@ def compute_stability_score_1d(
         nan_map = np.full_like(occupancy_time, np.nan)
         return np.nan, np.nan, np.nan, nan_map, nan_map, np.array([])
     block_width = span / n_split_blocks
+    if not 0.0 <= block_shift < 1.0:
+        raise ValueError(f"block_shift must be in [0, 1); got {block_shift}.")
     offset = block_shift * block_width
 
     traj_block_ids = np.floor((all_frames - frame_min - offset) / block_width).astype(int)
