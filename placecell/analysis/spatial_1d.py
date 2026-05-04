@@ -77,7 +77,9 @@ def _shuffled_rate_map_1d(
     event_weights = event_weights.astype(float)
     if spatial_sigma > 0:
         event_weights = gaussian_filter_normalized_1d(
-            event_weights, sigma=spatial_sigma, segment_bins=segment_bins,
+            event_weights,
+            sigma=spatial_sigma,
+            segment_bins=segment_bins,
         )
     rate = np.zeros_like(occ_for_division)
     rate[valid_mask] = event_weights[valid_mask] / occ_for_division[valid_mask]
@@ -305,8 +307,13 @@ def compute_spatial_information_1d(
     for i in range(n_shuffles):
         s_shuffled = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
         rate_shuf = _shuffled_rate_map_1d(
-            traj_pos, s_shuffled, edges, occ_for_division,
-            valid_mask, spatial_sigma, segment_bins,
+            traj_pos,
+            s_shuffled,
+            edges,
+            occ_for_division,
+            valid_mask,
+            spatial_sigma,
+            segment_bins,
         )
         shuf_lambda = np.sum(rate_shuf[valid_mask] * occupancy_time[valid_mask]) / total_time
         valid_s = (rate_shuf > 0) & valid_mask & (shuf_lambda > 0)
@@ -489,12 +496,22 @@ def compute_stability_score_1d(
         for i in range(n_shuffles):
             shifted = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
             rm1 = _shuffled_rate_map_1d(
-                traj_pos_first, shifted[traj_first_mask], edges,
-                os1, valid_first, spatial_sigma, segment_bins,
+                traj_pos_first,
+                shifted[traj_first_mask],
+                edges,
+                os1,
+                valid_first,
+                spatial_sigma,
+                segment_bins,
             )
             rm2 = _shuffled_rate_map_1d(
-                traj_pos_second, shifted[traj_second_mask], edges,
-                os2, valid_second, spatial_sigma, segment_bins,
+                traj_pos_second,
+                shifted[traj_second_mask],
+                edges,
+                os2,
+                valid_second,
+                spatial_sigma,
+                segment_bins,
             )
 
             if not np.any(bv):

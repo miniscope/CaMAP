@@ -552,16 +552,21 @@ class MazeDataset(BasePlaceCellDataset):
 
         with matplotlib.rc_context(rc):
             if self.trajectory_1d_filtered is not None and self.occupancy_time is not None:
-                _save_pdf(figures_dir, "occupancy.pdf", lambda: plot_occupancy_preview_1d(
-                    self.trajectory_1d_filtered,
-                    self.occupancy_time,
-                    self.valid_mask,
-                    self.edges_1d,
-                    trajectory_1d=self.trajectory_1d,
-                    trajectory_1d_all=self.trajectory_1d_all,
-                    arm_boundaries=self.arm_boundaries,
-                    arm_labels=self.effective_arm_order,
-                ), saved)
+                _save_pdf(
+                    figures_dir,
+                    "occupancy.pdf",
+                    lambda: plot_occupancy_preview_1d(
+                        self.trajectory_1d_filtered,
+                        self.occupancy_time,
+                        self.valid_mask,
+                        self.edges_1d,
+                        trajectory_1d=self.trajectory_1d,
+                        trajectory_1d_all=self.trajectory_1d_all,
+                        arm_boundaries=self.arm_boundaries,
+                        arm_labels=self.effective_arm_order,
+                    ),
+                    saved,
+                )
 
             # 2D behavior preview (trajectory density + speed histogram)
             if (
@@ -569,15 +574,21 @@ class MazeDataset(BasePlaceCellDataset):
                 and self.trajectory_1d_filtered is not None
                 and "x" in self.canonical.columns
             ):
-                _save_pdf(figures_dir, "behavior_preview.pdf", lambda: plot_behavior_preview(
-                    self.canonical,
-                    self.trajectory_1d_filtered,
-                    self.cfg.behavior.speed_threshold,
-                    speed_unit="mm/s",
-                    speed_column="speed_1d",
-                ), saved)
+                _save_pdf(
+                    figures_dir,
+                    "behavior_preview.pdf",
+                    lambda: plot_behavior_preview(
+                        self.canonical,
+                        self.trajectory_1d_filtered,
+                        self.cfg.behavior.speed_threshold,
+                        speed_unit="mm/s",
+                        speed_column="speed_1d",
+                    ),
+                    saved,
+                )
 
             if self.trajectory_1d is not None and "speed_1d" in self.trajectory_1d.columns:
+
                 def _speed_hist_fig() -> Any:
                     speeds = self.trajectory_1d["speed_1d"].to_numpy()
                     n_filt = (
@@ -592,43 +603,59 @@ class MazeDataset(BasePlaceCellDataset):
                         n_filtered=n_filt,
                         n_total=len(self.trajectory_1d),
                     )
+
                 _save_pdf(figures_dir, "speed_histogram.pdf", _speed_hist_fig, saved)
 
             if self.unit_results and self.edges_1d is not None:
-                _save_pdf(figures_dir, "population_rate_map.pdf",
+                _save_pdf(
+                    figures_dir,
+                    "population_rate_map.pdf",
                     lambda: plot_shuffle_test_1d(
                         self.unit_results,
                         self.edges_1d,
                         p_value_threshold=self.p_value_threshold,
                         arm_boundaries=self.arm_boundaries,
                         arm_labels=self.effective_arm_order,
-                    ), saved)
+                    ),
+                    saved,
+                )
 
                 def _pvo_fig() -> Any:
                     pvo_results = compute_dataset_arm_pvo(self, use_place_cells=True)
                     return plot_arm_pvo_grid(pvo_results, self.effective_arm_order)
+
                 _save_pdf(figures_dir, "global_pvo_matrix.pdf", _pvo_fig, saved)
 
             place_cell_results = self.place_cells()
             if place_cell_results and self.trajectory_1d is not None:
-                _save_pdf(figures_dir, "speed_traces.pdf", lambda: plot_position_and_traces_1d(
-                    self.trajectory_1d,
-                    place_cell_results,
-                    self.edges_1d,
-                    behavior_fps=self.data_cfg.behavior.fps,
-                    speed_threshold=self.cfg.behavior.speed_threshold,
-                    trajectory_1d_filtered=self.trajectory_1d_filtered,
-                    arm_boundaries=self.arm_boundaries,
-                    arm_labels=self.effective_arm_order,
-                ), saved)
+                _save_pdf(
+                    figures_dir,
+                    "speed_traces.pdf",
+                    lambda: plot_position_and_traces_1d(
+                        self.trajectory_1d,
+                        place_cell_results,
+                        self.edges_1d,
+                        behavior_fps=self.data_cfg.behavior.fps,
+                        speed_threshold=self.cfg.behavior.speed_threshold,
+                        trajectory_1d_filtered=self.trajectory_1d_filtered,
+                        arm_boundaries=self.arm_boundaries,
+                        arm_labels=self.effective_arm_order,
+                    ),
+                    saved,
+                )
 
             if self.graph_polylines is not None:
-                _save_pdf(figures_dir, "graph_overlay.pdf", lambda: plot_graph_overlay(
-                    self.graph_polylines,
-                    self.graph_mm_per_pixel,
-                    arm_order=self.data_cfg.behavior.arm_order,
-                    video_frame=self.behavior_video_frame,
-                ), saved)
+                _save_pdf(
+                    figures_dir,
+                    "graph_overlay.pdf",
+                    lambda: plot_graph_overlay(
+                        self.graph_polylines,
+                        self.graph_mm_per_pixel,
+                        arm_order=self.data_cfg.behavior.arm_order,
+                        video_frame=self.behavior_video_frame,
+                    ),
+                    saved,
+                )
 
         return saved
 

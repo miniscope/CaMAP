@@ -42,6 +42,7 @@ def _save_pdf(figures_dir: Path, name: str, builder: Any, saved: list[str]) -> N
     """
     try:
         import matplotlib.pyplot as _plt
+
         fig = builder()
         fig.savefig(figures_dir / name, bbox_inches="tight")
         _plt.close(fig)
@@ -721,26 +722,50 @@ class BasePlaceCellDataset(abc.ABC):
 
         with matplotlib.rc_context(rc):
             if self.unit_results:
-                _save_pdf(figures_dir, "diagnostics.pdf", lambda: plot_diagnostics(
-                    self.unit_results, p_value_threshold=self.p_value_threshold,
-                ), saved)
-                _save_pdf(figures_dir, "summary_scatter.pdf", lambda: plot_summary_scatter(
-                    self.unit_results,
-                    p_value_threshold=self.p_value_threshold,
-                    n_shuffles=self._shuffle_n,
-                    min_shift_seconds=self._shuffle_shift,
-                ), saved)
-                _save_pdf(figures_dir, "stability_splits.pdf",
+                _save_pdf(
+                    figures_dir,
+                    "diagnostics.pdf",
+                    lambda: plot_diagnostics(
+                        self.unit_results,
+                        p_value_threshold=self.p_value_threshold,
+                    ),
+                    saved,
+                )
+                _save_pdf(
+                    figures_dir,
+                    "summary_scatter.pdf",
+                    lambda: plot_summary_scatter(
+                        self.unit_results,
+                        p_value_threshold=self.p_value_threshold,
+                        n_shuffles=self._shuffle_n,
+                        min_shift_seconds=self._shuffle_shift,
+                    ),
+                    saved,
+                )
+                _save_pdf(
+                    figures_dir,
+                    "stability_splits.pdf",
                     lambda: plot_stability_splits_summary(
-                        self.unit_results, p_value_threshold=self.p_value_threshold,
-                    ), saved)
+                        self.unit_results,
+                        p_value_threshold=self.p_value_threshold,
+                    ),
+                    saved,
+                )
 
-            _save_pdf(figures_dir, "timestamp_diagnostics.pdf",
-                lambda: plot_timestamp_diagnostics(self.trajectory_raw, self.canonical), saved)
+            _save_pdf(
+                figures_dir,
+                "timestamp_diagnostics.pdf",
+                lambda: plot_timestamp_diagnostics(self.trajectory_raw, self.canonical),
+                saved,
+            )
 
             if self.max_proj is not None and self.footprints is not None:
-                _save_pdf(figures_dir, "footprints.pdf",
-                    lambda: plot_footprints_filled(self.max_proj, self.footprints), saved)
+                _save_pdf(
+                    figures_dir,
+                    "footprints.pdf",
+                    lambda: plot_footprints_filled(self.max_proj, self.footprints),
+                    saved,
+                )
 
         return saved
 

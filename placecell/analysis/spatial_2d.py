@@ -68,7 +68,10 @@ def _shuffled_rate_map(
     when smoothing, or raw ``occupancy_time`` when ``spatial_sigma == 0``.
     """
     event_weights, _, _ = np.histogram2d(
-        traj_x, traj_y, bins=[x_edges, y_edges], weights=weights,
+        traj_x,
+        traj_y,
+        bins=[x_edges, y_edges],
+        weights=weights,
     )
     if spatial_sigma > 0:
         event_weights = gaussian_filter_normalized(event_weights, sigma=spatial_sigma)
@@ -312,8 +315,14 @@ def compute_spatial_information(
     for i in range(n_shuffles):
         s_shuffled = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
         rate_shuf = _shuffled_rate_map(
-            traj_x, traj_y, s_shuffled, x_edges, y_edges,
-            occ_for_division, valid_mask, spatial_sigma,
+            traj_x,
+            traj_y,
+            s_shuffled,
+            x_edges,
+            y_edges,
+            occ_for_division,
+            valid_mask,
+            spatial_sigma,
         )
         shuf_lambda = np.sum(rate_shuf[valid_mask] * occupancy_time[valid_mask]) / total_time
         valid_s = (rate_shuf > 0) & valid_mask & (shuf_lambda > 0)
@@ -417,8 +426,14 @@ def compute_shuffled_rate_percentile(
     for i in range(n_shuffles):
         s_shuffled = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
         rate_shuf = _shuffled_rate_map(
-            traj_x, traj_y, s_shuffled, x_edges, y_edges,
-            occ_smooth, valid_mask, spatial_sigma,
+            traj_x,
+            traj_y,
+            s_shuffled,
+            x_edges,
+            y_edges,
+            occ_smooth,
+            valid_mask,
+            spatial_sigma,
         )
         # Don't peak-normalize per shuffle: a single hot bin would push the
         # rest down and make the 95th-percentile floor anti-conservative.
@@ -646,12 +661,24 @@ def compute_stability_score(
         for i in range(n_shuffles):
             shifted = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
             rm1 = _shuffled_rate_map(
-                traj_x_first, traj_y_first, shifted[traj_first_mask],
-                x_edges, y_edges, os1, valid_first, spatial_sigma,
+                traj_x_first,
+                traj_y_first,
+                shifted[traj_first_mask],
+                x_edges,
+                y_edges,
+                os1,
+                valid_first,
+                spatial_sigma,
             )
             rm2 = _shuffled_rate_map(
-                traj_x_second, traj_y_second, shifted[traj_second_mask],
-                x_edges, y_edges, os2, valid_second, spatial_sigma,
+                traj_x_second,
+                traj_y_second,
+                shifted[traj_second_mask],
+                x_edges,
+                y_edges,
+                os2,
+                valid_second,
+                spatial_sigma,
             )
 
             if not np.any(bv):

@@ -499,18 +499,23 @@ class ArenaDataset(BasePlaceCellDataset):
         with matplotlib.rc_context(rc):
             if self.trajectory_filtered is not None and self.occupancy_time is not None:
                 scfg = self.spatial
-                _save_pdf(figures_dir, "occupancy.pdf", lambda: plot_occupancy_preview(
-                    self.trajectory_filtered,
-                    self.occupancy_time,
-                    self.valid_mask,
-                    self.x_edges,
-                    self.y_edges,
-                    behavior_fps=self.neural_fps,
-                    stability_splits=scfg.stability_splits,
-                    block_shift=scfg.block_shift,
-                    min_occupancy=scfg.min_occupancy,
-                    spatial_sigma=scfg.spatial_sigma,
-                ), saved)
+                _save_pdf(
+                    figures_dir,
+                    "occupancy.pdf",
+                    lambda: plot_occupancy_preview(
+                        self.trajectory_filtered,
+                        self.occupancy_time,
+                        self.valid_mask,
+                        self.x_edges,
+                        self.y_edges,
+                        behavior_fps=self.neural_fps,
+                        stability_splits=scfg.stability_splits,
+                        block_shift=scfg.block_shift,
+                        min_occupancy=scfg.min_occupancy,
+                        spatial_sigma=scfg.spatial_sigma,
+                    ),
+                    saved,
+                )
 
             dbcfg = self.data_cfg.behavior if self.data_cfg else None
             if (
@@ -518,13 +523,18 @@ class ArenaDataset(BasePlaceCellDataset):
                 and dbcfg is not None
                 and getattr(dbcfg, "arena_bounds", None) is not None
             ):
-                _save_pdf(figures_dir, "arena_calibration.pdf", lambda: plot_arena_calibration(
-                    self.trajectory_raw,
-                    dbcfg.arena_bounds,
-                    arena_size_mm=dbcfg.arena_size_mm,
-                    mm_per_px=self.mm_per_px,
-                    video_frame=self.behavior_video_frame,
-                ), saved)
+                _save_pdf(
+                    figures_dir,
+                    "arena_calibration.pdf",
+                    lambda: plot_arena_calibration(
+                        self.trajectory_raw,
+                        dbcfg.arena_bounds,
+                        arena_size_mm=dbcfg.arena_size_mm,
+                        mm_per_px=self.mm_per_px,
+                        video_frame=self.behavior_video_frame,
+                    ),
+                    saved,
+                )
 
             if (
                 hasattr(self, "_preprocess_steps")
@@ -532,32 +542,46 @@ class ArenaDataset(BasePlaceCellDataset):
                 and dbcfg is not None
                 and getattr(dbcfg, "arena_size_mm", None) is not None
             ):
-                _save_pdf(figures_dir, "preprocess_steps.pdf",
+                _save_pdf(
+                    figures_dir,
+                    "preprocess_steps.pdf",
                     lambda: plot_preprocess_steps(self._preprocess_steps, dbcfg.arena_size_mm),
-                    saved)
+                    saved,
+                )
 
             # Speed distribution (behavior preview with speed histogram)
             if self.canonical is not None and self.trajectory_filtered is not None:
-                _save_pdf(figures_dir, "behavior_preview.pdf", lambda: plot_behavior_preview(
-                    self.canonical,
-                    self.trajectory_filtered,
-                    self.cfg.behavior.speed_threshold,
-                    speed_unit="mm/s" if self.mm_per_px else "px/s",
-                ), saved)
+                _save_pdf(
+                    figures_dir,
+                    "behavior_preview.pdf",
+                    lambda: plot_behavior_preview(
+                        self.canonical,
+                        self.trajectory_filtered,
+                        self.cfg.behavior.speed_threshold,
+                        speed_unit="mm/s" if self.mm_per_px else "px/s",
+                    ),
+                    saved,
+                )
 
             place_cell_results = self.place_cells()
 
             if place_cell_results and self.canonical is not None:
-                _save_pdf(figures_dir, "speed_traces.pdf", lambda: plot_position_and_traces_2d(
-                    self.canonical,
-                    place_cell_results,
-                    behavior_fps=self.neural_fps,
-                    speed_threshold=self.cfg.behavior.speed_threshold,
-                    trajectory_filtered=self.trajectory_filtered,
-                    speed_unit="mm/s" if self.mm_per_px else "px/s",
-                ), saved)
+                _save_pdf(
+                    figures_dir,
+                    "speed_traces.pdf",
+                    lambda: plot_position_and_traces_2d(
+                        self.canonical,
+                        place_cell_results,
+                        behavior_fps=self.neural_fps,
+                        speed_threshold=self.cfg.behavior.speed_threshold,
+                        trajectory_filtered=self.trajectory_filtered,
+                        speed_unit="mm/s" if self.mm_per_px else "px/s",
+                    ),
+                    saved,
+                )
 
             if place_cell_results:
+
                 def _coverage_fig() -> Any:
                     coverage_map, _, _ = self.coverage()
                     return plot_coverage(
@@ -567,6 +591,7 @@ class ArenaDataset(BasePlaceCellDataset):
                         self.valid_mask,
                         len(place_cell_results),
                     )
+
                 _save_pdf(figures_dir, "coverage.pdf", _coverage_fig, saved)
 
         return saved
