@@ -13,7 +13,7 @@ from camap.analysis.spatial_1d import (
 )
 from camap.config import SpatialMap1DConfig, ZoneDetectionConfig
 from camap.dataset.base import (
-    BasePlaceCellDataset,
+    BaseCaMAPDataset,
     StabilitySplitResult,
     UnitResult,
     _save_pdf,
@@ -36,7 +36,7 @@ from camap.temporal_alignment import (
 logger = init_logger(__name__)
 
 
-class MazeDataset(BasePlaceCellDataset):
+class MazeDataset(BaseCaMAPDataset):
     """Dataset for 1D arm/maze place cell analysis.
 
     Overrides the behavior preprocessing, occupancy computation, and

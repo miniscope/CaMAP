@@ -1,8 +1,8 @@
-# camap
+# CaMAP
 
 [![Tests](https://github.com/miniscope/camap/actions/workflows/test.yml/badge.svg)](https://github.com/miniscope/camap/actions/workflows/test.yml)
 
-Place cell analysis toolkit for calcium imaging data.
+Calcium imaging mapping and analysis pipeline.
 
 ## Documentation
 

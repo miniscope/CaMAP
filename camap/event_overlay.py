@@ -1,6 +1,6 @@
 """Helpers for cell-event overlay and zone-occupancy plots.
 
-These functions operate on a fully-loaded ``BasePlaceCellDataset`` (typically
+These functions operate on a fully-loaded ``BaseCaMAPDataset`` (typically
 restored from a ``.pcellbundle``) and are kept generic enough to be reused
 between the per-session maze viewer and cross-session analyses.
 """
@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
-    from camap.dataset import BasePlaceCellDataset
+    from camap.dataset import BaseCaMAPDataset
 
 UNKNOWN_LABELS = {"unknown", "Unknown", "UNKNOWN"}
 
@@ -52,7 +52,7 @@ DEFAULT_PALETTE: list[Any] = [_DARK2(i) for i in range(8) if i not in _SKIP_DARK
 ROOM_COLOR = "0.6"
 
 
-def _resolve_arm_lists(ds: BasePlaceCellDataset) -> tuple[list[str], list[str]]:
+def _resolve_arm_lists(ds: BaseCaMAPDataset) -> tuple[list[str], list[str]]:
     """Return (raw_arms, effective_arm_order)."""
     bcfg = ds.data_cfg.behavior if ds.data_cfg else None
     raw_arms = list((bcfg.arm_order if bcfg and getattr(bcfg, "arm_order", None) else []) or [])
@@ -70,7 +70,7 @@ def arm_color_map(arm_order: Sequence[str]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def compute_zone_occupancy(ds: BasePlaceCellDataset) -> tuple[pd.Series, pd.Series, float]:
+def compute_zone_occupancy(ds: BaseCaMAPDataset) -> tuple[pd.Series, pd.Series, float]:
     """Return ``(arm_seconds, room_seconds, unknown_seconds)`` for ``ds``.
 
     Arm frames are labeled ``{zone}_{direction}`` when the canonical table
@@ -125,7 +125,7 @@ def compute_zone_occupancy(ds: BasePlaceCellDataset) -> tuple[pd.Series, pd.Seri
 
 
 def plot_zone_occupancy(
-    ds: BasePlaceCellDataset,
+    ds: BaseCaMAPDataset,
     *,
     proportion: bool = False,
     title: str | None = None,
@@ -179,7 +179,7 @@ def plot_zone_occupancy(
 
 
 def plot_cross_session_occupancy(
-    datasets: dict[str, BasePlaceCellDataset],
+    datasets: dict[str, BaseCaMAPDataset],
     *,
     title: str | None = None,
 ) -> plt.Figure:
@@ -249,14 +249,14 @@ def plot_cross_session_occupancy(
 # ---------------------------------------------------------------------------
 
 
-def select_top_place_cells(ds: BasePlaceCellDataset, n: int) -> list[int]:
+def select_top_place_cells(ds: BaseCaMAPDataset, n: int) -> list[int]:
     """Top-N place cell unit_ids ranked by SI."""
     pcs = ds.place_cells()
     return [uid for uid, _ in sorted(pcs.items(), key=lambda kv: -kv[1].si)[:n]]
 
 
 def gather_events(
-    ds: BasePlaceCellDataset,
+    ds: BaseCaMAPDataset,
     unit_ids: Sequence[int],
     *,
     event_percentile: float = 0.0,
@@ -306,7 +306,7 @@ def _directions_in(canonical: pd.DataFrame) -> list[Any]:
 
 
 def plot_event_overlay_2d(
-    ds: BasePlaceCellDataset,
+    ds: BaseCaMAPDataset,
     unit_ids: Sequence[int],
     *,
     events_by_cell: dict[int, pd.DataFrame] | None = None,
@@ -375,7 +375,7 @@ def plot_event_overlay_2d(
 
 
 def plot_event_overlay_3d(
-    ds: BasePlaceCellDataset,
+    ds: BaseCaMAPDataset,
     unit_ids: Sequence[int],
     *,
     events_by_cell: dict[int, pd.DataFrame] | None = None,

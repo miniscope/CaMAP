@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 from tqdm.auto import tqdm
 
-from camap.dataset import BasePlaceCellDataset
+from camap.dataset import BaseCaMAPDataset
 
 # Config: stem name from camap/config/ or path to a YAML file.
 CONFIG = "example_arena_config"
@@ -35,7 +35,7 @@ def main() -> None:
         name = data_path.stem
         print(f"\n[{i + 1}/{len(SESSIONS)}] {name}")
 
-        ds = BasePlaceCellDataset.from_yaml(CONFIG, data_path)
+        ds = BaseCaMAPDataset.from_yaml(CONFIG, data_path)
         ds.load()
         ds.preprocess_behavior()
         ds.deconvolve(progress_bar=tqdm)

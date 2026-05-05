@@ -15,7 +15,7 @@ from camap.analysis.spatial_2d import (
 from camap.behavior import clip_to_arena, correct_perspective, remove_position_jumps
 from camap.config import BaseSpatialMapConfig
 from camap.dataset.base import (
-    BasePlaceCellDataset,
+    BaseCaMAPDataset,
     StabilitySplitResult,
     UnitResult,
     _save_pdf,
@@ -33,7 +33,7 @@ from camap.temporal_alignment import (
 logger = init_logger(__name__)
 
 
-class ArenaDataset(BasePlaceCellDataset):
+class ArenaDataset(BaseCaMAPDataset):
     """Dataset for 2D open-field arena place cell analysis.
 
     Adds arena-specific functionality: perspective correction scale

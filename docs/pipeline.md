@@ -4,7 +4,7 @@ This document explains how the spatial neural activity analysis pipeline works.
 
 ## Overview
 
-Both `ArenaDataset` (2D) and `MazeDataset` (1D) implement the same abstract pipeline defined by `BasePlaceCellDataset`. Each step depends on the previous one.
+Both `ArenaDataset` (2D) and `MazeDataset` (1D) implement the same abstract pipeline defined by `BaseCaMAPDataset`. Each step depends on the previous one.
 
 1. `from_yaml(config, data_path)` — parse configs, auto-select ArenaDataset or MazeDataset
 2. `load()` — load neural traces, behavior positions, visualization assets

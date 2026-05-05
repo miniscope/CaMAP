@@ -4,7 +4,7 @@ from pathlib import Path as _Path
 
 from camap.dataset import (
     ArenaDataset,
-    BasePlaceCellDataset,
+    BaseCaMAPDataset,
     MazeDataset,
     StabilitySplitResult,
     UnitResult,
@@ -35,7 +35,7 @@ __version__ = _resolve_version()
 
 __all__ = [
     "ArenaDataset",
-    "BasePlaceCellDataset",
+    "BaseCaMAPDataset",
     "MazeDataset",
     "StabilitySplitResult",
     "UnitResult",

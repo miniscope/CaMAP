@@ -11,7 +11,7 @@ import pytest
 
 matplotlib.use("Agg")
 
-from camap.dataset.base import BasePlaceCellDataset
+from camap.dataset.base import BaseCaMAPDataset
 from camap.dataset.maze import MazeDataset
 from camap.event_overlay import (
     ProjectionConfig,
@@ -29,7 +29,7 @@ REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_1d"
 @pytest.fixture(scope="module")
 def ds() -> MazeDataset:
     """Run the 1D maze pipeline once for this module."""
-    dataset = BasePlaceCellDataset.from_yaml(
+    dataset = BaseCaMAPDataset.from_yaml(
         REGRESSION_DIR / "analysis_config.yaml",
         REGRESSION_DIR / "data_paths.yaml",
     )

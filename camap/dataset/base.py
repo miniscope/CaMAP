@@ -194,12 +194,12 @@ class UnitResult:
         return all(not np.isnan(s.p_val) and s.p_val < p_threshold for s in self.stability_splits)
 
 
-class BasePlaceCellDataset(abc.ABC):
+class BaseCaMAPDataset(abc.ABC):
     """Base class for place cell analysis datasets.
 
     Shared pipeline (each step populates attributes for the next)::
 
-        ds = BasePlaceCellDataset.from_yaml(config_path, data_path)
+        ds = BaseCaMAPDataset.from_yaml(config_path, data_path)
         ds.load()                            # traces, trajectory, footprints
         ds.preprocess_behavior()             # corrections + speed filter
         ds.deconvolve(progress_bar=tqdm)     # good_unit_ids, S_list
@@ -277,7 +277,7 @@ class BasePlaceCellDataset(abc.ABC):
         self.unit_results: dict[int, UnitResult] = {}
 
     @classmethod
-    def from_yaml(cls, config: str | Path, data_path: str | Path) -> "BasePlaceCellDataset":
+    def from_yaml(cls, config: str | Path, data_path: str | Path) -> "BaseCaMAPDataset":
         """Create dataset from analysis config and data paths file.
 
         Parameters
@@ -310,7 +310,7 @@ class BasePlaceCellDataset(abc.ABC):
             from camap.dataset.maze import MazeDataset
 
             klass = MazeDataset
-        elif cls is BasePlaceCellDataset:
+        elif cls is BaseCaMAPDataset:
             from camap.dataset.arena import ArenaDataset
 
             klass = ArenaDataset
@@ -849,7 +849,7 @@ class BasePlaceCellDataset(abc.ABC):
             pd.concat(parts, ignore_index=True).to_parquet(ur_dir / "events.parquet")
 
     @classmethod
-    def _load_bundle_data(cls, path: Path) -> "BasePlaceCellDataset":
+    def _load_bundle_data(cls, path: Path) -> "BaseCaMAPDataset":
         """Load bundle data into a *cls* instance (no subclass auto-selection).
 
         Handles metadata validation, config loading, and restoration of all
@@ -972,7 +972,7 @@ class BasePlaceCellDataset(abc.ABC):
         return ds
 
     @classmethod
-    def load_bundle(cls, path: str | Path) -> "BasePlaceCellDataset":
+    def load_bundle(cls, path: str | Path) -> "BaseCaMAPDataset":
         """Load a previously saved ``.pcellbundle`` directory.
 
         Parameters
@@ -982,7 +982,7 @@ class BasePlaceCellDataset(abc.ABC):
 
         Returns
         -------
-        BasePlaceCellDataset
+        BaseCaMAPDataset
             Dataset with all attributes restored. Recomputation methods
             (``load``, ``deconvolve``, etc.) are unavailable since the
             original raw data paths are not preserved.
@@ -990,7 +990,7 @@ class BasePlaceCellDataset(abc.ABC):
         path = Path(path)
 
         # Auto-select subclass based on behavior type
-        if cls is BasePlaceCellDataset:
+        if cls is BaseCaMAPDataset:
             if not path.is_dir():
                 raise FileNotFoundError(f"Bundle not found: {path}")
             cfg = AnalysisConfig.from_yaml(path / "config.yaml")

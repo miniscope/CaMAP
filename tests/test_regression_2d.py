@@ -16,7 +16,7 @@ import pandas as pd
 import pytest
 
 from camap.dataset.arena import ArenaDataset
-from camap.dataset.base import BasePlaceCellDataset
+from camap.dataset.base import BaseCaMAPDataset
 
 
 REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_2d"
@@ -25,7 +25,7 @@ REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_2d"
 @pytest.fixture(scope="module")
 def pipeline_result() -> ArenaDataset:
     """Run the full pipeline once for all tests in this module."""
-    ds = BasePlaceCellDataset.from_yaml(
+    ds = BaseCaMAPDataset.from_yaml(
         REGRESSION_DIR / "analysis_config.yaml",
         REGRESSION_DIR / "data_paths.yaml",
     )
@@ -41,7 +41,7 @@ def pipeline_result() -> ArenaDataset:
 @pytest.fixture(scope="module")
 def reference() -> ArenaDataset:
     """Load the reference bundle."""
-    return BasePlaceCellDataset.load_bundle(REGRESSION_DIR / "reference.pcellbundle")
+    return BaseCaMAPDataset.load_bundle(REGRESSION_DIR / "reference.pcellbundle")
 
 
 
@@ -181,7 +181,7 @@ def test_save_load_bundle_roundtrip(
         bundle_path = pipeline_result.save_bundle(
             Path(tmp) / "test", save_figures=False
         )
-        reloaded = BasePlaceCellDataset.load_bundle(bundle_path)
+        reloaded = BaseCaMAPDataset.load_bundle(bundle_path)
 
     assert isinstance(reloaded, ArenaDataset)
     assert reloaded.summary() == pipeline_result.summary()

@@ -66,9 +66,9 @@ Arena workflow skips steps 1–2.
 For Python-driven batch runs, see `examples/batch_analysis.py`. It mirrors the CLI but exposes intermediate state (so you can inject custom logic between `match_events()` and `analyze_units()`, or swap out individual steps). The key entry point is:
 
 ```python
-from camap.dataset import BasePlaceCellDataset
+from camap.dataset import BaseCaMAPDataset
 
-ds = BasePlaceCellDataset.from_yaml("config.yaml", "data_paths.yaml")
+ds = BaseCaMAPDataset.from_yaml("config.yaml", "data_paths.yaml")
 ds.load()
 ds.preprocess_behavior()
 ds.deconvolve()

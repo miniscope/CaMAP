@@ -114,7 +114,7 @@ def _run_one(
     """Run the pipeline for a single dataset."""
     from tqdm.auto import tqdm
 
-    from camap.dataset.base import BasePlaceCellDataset
+    from camap.dataset.base import BaseCaMAPDataset
     from camap.dataset.maze import MazeDataset
 
     data_p = Path(data_path)
@@ -125,7 +125,7 @@ def _run_one(
     else:
         out = output
 
-    ds = BasePlaceCellDataset.from_yaml(config, data_path)
+    ds = BaseCaMAPDataset.from_yaml(config, data_path)
 
     if isinstance(ds, MazeDataset):
         ds.load(force_redetect=force_redetect)

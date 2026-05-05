@@ -138,9 +138,9 @@ camap analysis -c config.yaml -d data_paths.yaml
 Or via Python:
 
 ```python
-from camap.dataset import BasePlaceCellDataset
+from camap.dataset import BaseCaMAPDataset
 
-ds = BasePlaceCellDataset.from_yaml("config.yaml", "data_paths.yaml")
+ds = BaseCaMAPDataset.from_yaml("config.yaml", "data_paths.yaml")
 ds.load()
 ds.preprocess_behavior()
 ds.deconvolve()
