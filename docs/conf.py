@@ -39,6 +39,7 @@ myst_enable_extensions = [
 ]
 
 myst_fence_as_directive = ["mermaid"]
+myst_heading_anchors = 3
 
 html_theme = "sphinx_book_theme"
 html_title = "CaMAP"
