@@ -2,8 +2,8 @@
 
 from importlib.metadata import version as get_version
 
-project = "camap"
-copyright = "2025, Takuya Sasatani"
+project = "CaMAP"
+copyright = "2026, Takuya Sasatani"
 author = "t-sasatani"
 release = get_version("camap")
 version = ".".join(release.split(".")[:2])
@@ -41,7 +41,7 @@ myst_enable_extensions = [
 myst_fence_as_directive = ["mermaid"]
 
 html_theme = "sphinx_book_theme"
-html_title = "camap"
+html_title = "CaMAP"
 
 html_theme_options = {
     "show_toc_level": 2,

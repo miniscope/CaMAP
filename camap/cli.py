@@ -13,7 +13,7 @@ logger = init_logger(__name__)
 @click.group()
 @click.version_option(__version__, "-V", "--version", prog_name="camap")
 def cli() -> None:
-    """Placecell analysis pipeline."""
+    """CaMAP analysis pipeline."""
 
 
 @cli.command()
