@@ -1,7 +1,7 @@
 # CaMAP
 
 [![Tests](https://github.com/miniscope/CaMAP/actions/workflows/test.yml/badge.svg)](https://github.com/miniscope/CaMAP/actions/workflows/test.yml)
-[![PyPI](https://img.shields.io/pypi/v/camap.svg)](https://pypi.org/project/camap/)
+[![PyPI](https://img.shields.io/pypi/v/camap)](https://pypi.org/project/camap/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Calcium imaging mapping and analysis pipeline. Extracts neural events from
