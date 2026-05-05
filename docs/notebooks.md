@@ -1,6 +1,6 @@
 # Notebooks
 
-Three notebooks ship in `notebook/`. The two results viewers consume `.pcellbundle` directories produced by `placecell analysis`; the calcium trace viewer reads a Minian output directly and does not need a bundle. All three need **Jupyter Lab** for the interactive widgets:
+Three notebooks ship in `notebook/`. The two results viewers consume `.pcellbundle` directories produced by `camap analysis`; the calcium trace viewer reads a Minian output directly and does not need a bundle. All three need **Jupyter Lab** for the interactive widgets:
 
 ```bash
 cd notebook && jupyter lab --no-browser
@@ -31,9 +31,9 @@ Same `BUNDLE_PATHS` convention as the arena viewer.
 
 ## `plot_calcium_traces.ipynb` — raw trace inspection
 
-Standalone Minian viewer — does *not* depend on `.pcellbundle` or the placecell pipeline. Reads `C.zarr`, `A.zarr`, and `max_proj.zarr` from a Minian output directory and produces:
+Standalone Minian viewer — does *not* depend on `.pcellbundle` or the camap pipeline. Reads `C.zarr`, `A.zarr`, and `max_proj.zarr` from a Minian output directory and produces:
 
 1. Full vertically-stacked traces with auto-distributed zoom panels.
 2. Max projection overlaid with filled colored spatial footprints (colors match the trace panels).
 
-Edit `MINIAN_DIR`, `FS_HZ`, and the zoom config at the top of the notebook. Useful for sanity-checking deconvolution-input quality before kicking off `placecell analysis`.
+Edit `MINIAN_DIR`, `FS_HZ`, and the zoom config at the top of the notebook. Useful for sanity-checking deconvolution-input quality before kicking off `camap analysis`.

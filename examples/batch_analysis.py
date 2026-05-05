@@ -9,9 +9,9 @@ from pathlib import Path
 import pandas as pd
 from tqdm.auto import tqdm
 
-from placecell.dataset import BasePlaceCellDataset
+from camap.dataset import BasePlaceCellDataset
 
-# Config: stem name from placecell/config/ or path to a YAML file.
+# Config: stem name from camap/config/ or path to a YAML file.
 CONFIG = "example_arena_config"
 
 # Output directory for .pcellbundle files.

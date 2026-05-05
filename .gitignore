@@ -4,7 +4,7 @@ user_data/
 _tmp/
 
 # hatch-vcs generated version file
-placecell/_version.py
+camap/_version.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

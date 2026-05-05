@@ -22,7 +22,7 @@ jobs:
           pip install black ruff
 
       - name: Check formatting (black)
-        run: black placecell --check --diff
+        run: black camap --check --diff
 
       - name: Lint (ruff)
-        run: ruff check placecell
+        run: ruff check camap

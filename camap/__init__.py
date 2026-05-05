@@ -2,7 +2,7 @@
 
 from pathlib import Path as _Path
 
-from placecell.dataset import (
+from camap.dataset import (
     ArenaDataset,
     BasePlaceCellDataset,
     MazeDataset,
@@ -23,7 +23,7 @@ def _resolve_version() -> str:
         except Exception:
             pass
     try:
-        from placecell._version import __version__ as _v
+        from camap._version import __version__ as _v
 
         return _v
     except ImportError:

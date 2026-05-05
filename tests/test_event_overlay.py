@@ -11,9 +11,9 @@ import pytest
 
 matplotlib.use("Agg")
 
-from placecell.dataset.base import BasePlaceCellDataset
-from placecell.dataset.maze import MazeDataset
-from placecell.event_overlay import (
+from camap.dataset.base import BasePlaceCellDataset
+from camap.dataset.maze import MazeDataset
+from camap.event_overlay import (
     ProjectionConfig,
     ViewConfig,
     gather_events,

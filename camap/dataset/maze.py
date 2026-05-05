@@ -7,19 +7,19 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from placecell.analysis.spatial_1d import (
+from camap.analysis.spatial_1d import (
     compute_occupancy_map_1d,
     compute_unit_analysis_1d,
 )
-from placecell.config import SpatialMap1DConfig, ZoneDetectionConfig
-from placecell.dataset.base import (
+from camap.config import SpatialMap1DConfig, ZoneDetectionConfig
+from camap.dataset.base import (
     BasePlaceCellDataset,
     StabilitySplitResult,
     UnitResult,
     _save_pdf,
 )
-from placecell.log import init_logger
-from placecell.maze_helper import (
+from camap.log import init_logger
+from camap.maze_helper import (
     assign_traversal_direction,
     compute_arm_lengths,
     compute_speed_1d,
@@ -27,7 +27,7 @@ from placecell.maze_helper import (
     load_graph_polylines,
     serialize_arm_position,
 )
-from placecell.temporal_alignment import (
+from camap.temporal_alignment import (
     build_canonical_table,
     derive_event_place_from_canonical,
     filter_canonical_by_speed,
@@ -75,7 +75,7 @@ class MazeDataset(BasePlaceCellDataset):
         Assumes the caller has already validated ``data_cfg`` and
         ``bodypart``; only checks the conditions unique to detection.
         """
-        from placecell.zone_detection import detect_zones_from_csv
+        from camap.zone_detection import detect_zones_from_csv
 
         bcfg = self.data_cfg.behavior if self.data_cfg else None
         if bcfg is None:
@@ -83,7 +83,7 @@ class MazeDataset(BasePlaceCellDataset):
         if self.behavior_graph_path is None or not self.behavior_graph_path.exists():
             raise RuntimeError(
                 "behavior_graph is required to run detect-zones automatically. "
-                "Set it in the data config or run 'placecell detect-zones' manually."
+                "Set it in the data config or run 'camap detect-zones' manually."
             )
 
         zone_csv = self.zone_tracking_path
@@ -534,8 +534,8 @@ class MazeDataset(BasePlaceCellDataset):
         except ImportError:
             return saved
 
-        from placecell.analysis.pvo_1d import compute_dataset_arm_pvo, plot_arm_pvo_grid
-        from placecell.visualization import (
+        from camap.analysis.pvo_1d import compute_dataset_arm_pvo, plot_arm_pvo_grid
+        from camap.visualization import (
             plot_behavior_preview,
             plot_graph_overlay,
             plot_occupancy_preview_1d,

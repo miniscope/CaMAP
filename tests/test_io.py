@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from placecell.loaders import load_behavior_data, load_visualization_data
+from camap.loaders import load_behavior_data, load_visualization_data
 
 
 def test_load_behavior_data_shape(assets_dir: Path) -> None:

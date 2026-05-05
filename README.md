@@ -1,13 +1,13 @@
-# placecell
+# camap
 
-[![Tests](https://github.com/miniscope/placecell/actions/workflows/test.yml/badge.svg)](https://github.com/miniscope/placecell/actions/workflows/test.yml)
+[![Tests](https://github.com/miniscope/camap/actions/workflows/test.yml/badge.svg)](https://github.com/miniscope/camap/actions/workflows/test.yml)
 
 Place cell analysis toolkit for calcium imaging data.
 
 ## Documentation
 
-Full documentation available at: https://miniscope.github.io/placecell/
+Full documentation available at: https://miniscope.github.io/camap/
 
-- [Installation](https://miniscope.github.io/placecell/installation.html)
-- [Quickstart](https://miniscope.github.io/placecell/quickstart.html)
-- [Pipeline Details](https://miniscope.github.io/placecell/pipeline.html)
+- [Installation](https://miniscope.github.io/camap/installation.html)
+- [Quickstart](https://miniscope.github.io/camap/quickstart.html)
+- [Pipeline Details](https://miniscope.github.io/camap/pipeline.html)

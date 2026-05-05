@@ -5,7 +5,7 @@ compares every output against a saved reference bundle.
 
 To regenerate the reference bundle with low ``n_shuffles`` in the config::
 
-    placecell analysis -c config.yaml -d data.yaml -o tests/assets/regression_2d/reference -y --subset-units 10 --subset-frames 10000
+    camap analysis -c config.yaml -d data.yaml -o tests/assets/regression_2d/reference -y --subset-units 10 --subset-frames 10000
 """
 
 import tempfile
@@ -15,8 +15,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from placecell.dataset.arena import ArenaDataset
-from placecell.dataset.base import BasePlaceCellDataset
+from camap.dataset.arena import ArenaDataset
+from camap.dataset.base import BasePlaceCellDataset
 
 
 REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_2d"

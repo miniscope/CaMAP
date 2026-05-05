@@ -1,6 +1,6 @@
 """Interactive zone definition tool using OpenCV.
 
-Requires ``opencv-python`` (install with ``pip install placecell[zones]``).
+Requires ``opencv-python`` (install with ``pip install camap[zones]``).
 """
 
 import argparse
@@ -8,7 +8,7 @@ import argparse
 import numpy as np
 import yaml
 
-from placecell.log import init_logger
+from camap.log import init_logger
 
 logger = init_logger(__name__)
 

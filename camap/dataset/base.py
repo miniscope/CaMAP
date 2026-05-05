@@ -12,22 +12,22 @@ import pandas as pd
 import xarray as xr
 import yaml
 
-from placecell.config import (
+from camap.config import (
     CONFIG_DIR,
     AnalysisConfig,
     BaseSpatialMapConfig,
     DataConfig,
     MazeBehaviorDataConfig,
 )
-from placecell.loaders import load_visualization_data
-from placecell.log import init_logger
-from placecell.neural import load_calcium_traces, run_deconvolution
+from camap.loaders import load_visualization_data
+from camap.log import init_logger
+from camap.neural import load_calcium_traces, run_deconvolution
 
 logger = init_logger(__name__)
 
 _BUNDLE_VERSION = 1
 """Bundle schema version. Bump only on on-disk layout changes
-(field rename, file added/removed, dtype change). The ``placecell``
+(field rename, file added/removed, dtype change). The ``camap``
 package version is recorded separately in ``metadata.json`` and does
 not affect this number."""
 
@@ -284,7 +284,7 @@ class BasePlaceCellDataset(abc.ABC):
         ----------
         config:
             Path to analysis config YAML, or a stem name matching a
-            bundled config in ``placecell/config/`` (e.g. ``"example_arena_config"``).
+            bundled config in ``camap/config/`` (e.g. ``"example_arena_config"``).
         data_path:
             Path to the per-session data paths YAML file.
         """
@@ -307,11 +307,11 @@ class BasePlaceCellDataset(abc.ABC):
         # (load → deconvolve) match neural-only usage.
         klass = cls
         if isinstance(bcfg, MazeBehaviorDataConfig):
-            from placecell.dataset.maze import MazeDataset
+            from camap.dataset.maze import MazeDataset
 
             klass = MazeDataset
         elif cls is BasePlaceCellDataset:
-            from placecell.dataset.arena import ArenaDataset
+            from camap.dataset.arena import ArenaDataset
 
             klass = ArenaDataset
 
@@ -371,7 +371,7 @@ class BasePlaceCellDataset(abc.ABC):
         quality immediately after ``load()``, before waiting for
         deconvolution.
         """
-        from placecell.dataset_validation import infer_fps, validate_neural_timestamps
+        from camap.dataset_validation import infer_fps, validate_neural_timestamps
 
         ts_df = pd.read_csv(self.neural_timestamp_path)
         if "timestamp_first" not in ts_df.columns:
@@ -611,7 +611,7 @@ class BasePlaceCellDataset(abc.ABC):
 
         path.mkdir(parents=True, exist_ok=True)
 
-        from placecell import __version__ as _package_version
+        from camap import __version__ as _package_version
 
         # ``version`` is the schema version (enforced on load)
         meta = {
@@ -705,7 +705,7 @@ class BasePlaceCellDataset(abc.ABC):
             logger.warning("matplotlib not available — skipping figure export")
             return []
 
-        from placecell.visualization import (
+        from camap.visualization import (
             plot_diagnostics,
             plot_footprints_filled,
             plot_stability_splits_summary,
@@ -913,7 +913,7 @@ class BasePlaceCellDataset(abc.ABC):
         # downstream consumers (notebook browser, regression tests) see
         # the same DataFrames as a freshly-run pipeline.
         if ds.canonical is not None:
-            from placecell.temporal_alignment import (
+            from camap.temporal_alignment import (
                 derive_event_place_from_canonical,
                 filter_canonical_by_speed,
             )
@@ -995,11 +995,11 @@ class BasePlaceCellDataset(abc.ABC):
                 raise FileNotFoundError(f"Bundle not found: {path}")
             cfg = AnalysisConfig.from_yaml(path / "config.yaml")
             if cfg.behavior and cfg.behavior.type == "maze":
-                from placecell.dataset.maze import MazeDataset
+                from camap.dataset.maze import MazeDataset
 
                 return MazeDataset.load_bundle(path)
 
-            from placecell.dataset.arena import ArenaDataset
+            from camap.dataset.arena import ArenaDataset
 
             return ArenaDataset._load_bundle_data(path)
 

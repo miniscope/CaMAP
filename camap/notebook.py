@@ -10,10 +10,10 @@ import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 
-from placecell.analysis.spatial_2d import _seed_rate_map, compute_place_field_mask
+from camap.analysis.spatial_2d import _seed_rate_map, compute_place_field_mask
 
 if TYPE_CHECKING:
-    from placecell.dataset.arena import ArenaDataset
+    from camap.dataset.arena import ArenaDataset
 
 
 def _halves_normalized_by_full_peak(

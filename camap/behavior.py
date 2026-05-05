@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from placecell.dataset_validation import hampel_mask
+from camap.dataset_validation import hampel_mask
 
 
 def _load_behavior_xy(

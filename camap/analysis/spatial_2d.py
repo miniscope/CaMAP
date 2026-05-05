@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import gaussian_filter, label
 
-from placecell.config import SpatialMap2DConfig
+from camap.config import SpatialMap2DConfig
 
 
 def gaussian_filter_normalized(

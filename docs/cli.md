@@ -1,7 +1,7 @@
 # CLI Reference
 
 ```{eval-rst}
-.. click:: placecell.cli:cli
-   :prog: placecell
+.. click:: camap.cli:cli
+   :prog: camap
    :nested: full
 ```

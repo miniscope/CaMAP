@@ -1,4 +1,4 @@
-# placecell
+# camap
 
 Place cell analysis toolkit for calcium imaging data.
 

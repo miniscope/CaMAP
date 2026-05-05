@@ -6,7 +6,7 @@ from typing import Annotated, Any, Literal, Union, get_args, get_origin
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from placecell.log import init_logger
+from camap.log import init_logger
 
 logger = init_logger(__name__)
 

@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from placecell.behavior import _load_behavior_xy
-from placecell.log import init_logger
-from placecell.neural import load_calcium_traces
+from camap.behavior import _load_behavior_xy
+from camap.log import init_logger
+from camap.neural import load_calcium_traces
 
 logger = init_logger(__name__)
 

@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
-    from placecell.dataset import BasePlaceCellDataset
+    from camap.dataset import BasePlaceCellDataset
 
 UNKNOWN_LABELS = {"unknown", "Unknown", "UNKNOWN"}
 

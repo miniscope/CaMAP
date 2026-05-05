@@ -1,17 +1,17 @@
-"""Command-line interface for the placecell analysis pipeline."""
+"""Command-line interface for the camap analysis pipeline."""
 
 from pathlib import Path
 
 import click
 
-from placecell import __version__
-from placecell.log import init_logger
+from camap import __version__
+from camap.log import init_logger
 
 logger = init_logger(__name__)
 
 
 @click.group()
-@click.version_option(__version__, "-V", "--version", prog_name="placecell")
+@click.version_option(__version__, "-V", "--version", prog_name="camap")
 def cli() -> None:
     """Placecell analysis pipeline."""
 
@@ -80,8 +80,8 @@ def analysis(
 ) -> None:
     """Run the place cell analysis pipeline.
 
-    Single dataset: placecell analysis -c config.yaml -d data.yaml
-    Batch mode:     placecell analysis -c config.yaml -d a.yaml -d b.yaml -y
+    Single dataset: camap analysis -c config.yaml -d data.yaml
+    Batch mode:     camap analysis -c config.yaml -d a.yaml -d b.yaml -y
     """
     for i, data_path in enumerate(data_paths):
         if len(data_paths) > 1:
@@ -114,8 +114,8 @@ def _run_one(
     """Run the pipeline for a single dataset."""
     from tqdm.auto import tqdm
 
-    from placecell.dataset.base import BasePlaceCellDataset
-    from placecell.dataset.maze import MazeDataset
+    from camap.dataset.base import BasePlaceCellDataset
+    from camap.dataset.maze import MazeDataset
 
     data_p = Path(data_path)
     if output is None:
@@ -176,8 +176,8 @@ def _run_one(
 @click.option("--arms", type=int, required=True, help="Number of arms.")
 def define_zones_cmd(data_path: str, rooms: int, arms: int) -> None:
     """Interactive zone definition tool (requires OpenCV)."""
-    from placecell.config import DataConfig, MazeBehaviorDataConfig
-    from placecell.define_zones import define_zones
+    from camap.config import DataConfig, MazeBehaviorDataConfig
+    from camap.define_zones import define_zones
 
     data_p = Path(data_path)
     data_cfg = DataConfig.from_yaml(data_p)
@@ -253,8 +253,8 @@ def detect_zones_cmd(
     """Run zone detection on tracking CSV using the zone graph."""
     from tqdm.auto import tqdm
 
-    from placecell.config import DataConfig, MazeBehaviorDataConfig, ZoneDetectionConfig
-    from placecell.zone_detection import backup_file, detect_zones_from_csv
+    from camap.config import DataConfig, MazeBehaviorDataConfig, ZoneDetectionConfig
+    from camap.zone_detection import backup_file, detect_zones_from_csv
 
     data_p = Path(data_path)
     data_cfg = DataConfig.from_yaml(data_p)

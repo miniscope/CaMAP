@@ -27,7 +27,7 @@ dependencies = [
 ]
 
 [project.scripts]
-placecell = "placecell.cli:cli"
+camap = "camap.cli:cli"
 
 [project.optional-dependencies]
 notebook = [
@@ -62,7 +62,7 @@ zones = [
     "opencv-python>=4.5.0",
 ]
 all = [
-    "placecell[notebook,dev,tests,docs]",
+    "camap[notebook,dev,tests,docs]",
 ]
 
 [build-system]
@@ -73,18 +73,18 @@ build-backend = "hatchling.build"
 source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
-version-file = "placecell/_version.py"
+version-file = "camap/_version.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["placecell"]
+packages = ["camap"]
 
 [tool.uv]
 no-binary-package = ["oasis-deconv"]
 
 [tool.ruff]
 target-version = "py311"
-include = ["placecell/**/*.py", "notebook/**/*.ipynb", "pyproject.toml"]
-exclude = ["docs", "tests", "placecell/assets", "placecell/_version.py"]
+include = ["camap/**/*.py", "notebook/**/*.ipynb", "pyproject.toml"]
+exclude = ["docs", "tests", "camap/assets", "camap/_version.py"]
 line-length = 100
 
 [tool.ruff.lint]
@@ -130,7 +130,7 @@ ignore = [
 
 [tool.black]
 target-version = ['py311', 'py312']
-include = "placecell/.*\\.py$"
+include = "camap/.*\\.py$"
 line-length = 100
 
 [tool.pytest.ini_options]
@@ -143,5 +143,5 @@ markers = [
 
 [tool.coverage.run]
 omit = [
-    "placecell/visualization.py",
+    "camap/visualization.py",
 ]
