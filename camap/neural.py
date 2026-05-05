@@ -10,6 +10,19 @@ from camap.log import init_logger
 
 logger = init_logger(__name__)
 
+_OASIS_INSTALL_HINT = (
+    "oasis-deconv is required for deconvolution but is not bundled with CaMAP.\n"
+    "\n"
+    "Install with one of:\n"
+    "  # source build (recommended; needs a C compiler)\n"
+    "  pip install --no-binary oasis-deconv oasis-deconv\n"
+    "\n"
+    "  # prebuilt binaries via conda-forge\n"
+    "  conda install -c conda-forge oasis-deconv\n"
+    "\n"
+    "See https://github.com/j-friedrich/OASIS for more."
+)
+
 
 def load_calcium_traces(
     neural_path: Path,
@@ -99,14 +112,7 @@ def run_deconvolution(
         try:
             from oasis.oasis_methods import oasisAR2
         except ImportError as exc:
-            raise ImportError(
-                "oasis-deconv is required for deconvolution but is not bundled "
-                "with camap. Recommended: "
-                "'pip install --no-binary oasis-deconv oasis-deconv' "
-                "(source build, needs a C compiler). Alternative: "
-                "'conda install -c conda-forge oasis-deconv' (prebuilt). "
-                "Upstream: https://github.com/j-friedrich/OASIS"
-            ) from exc
+            raise ImportError(_OASIS_INSTALL_HINT) from exc
     for w in caught:
         logger.warning(str(w.message))
 
