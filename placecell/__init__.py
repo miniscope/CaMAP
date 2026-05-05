@@ -1,4 +1,4 @@
-"""placecell - Package for analyzing place cells."""
+"""CaMAP — Calcium imaging mapping and analysis pipeline."""
 
 from pathlib import Path as _Path
 

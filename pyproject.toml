@@ -1,9 +1,12 @@
 [project]
-name = "placecell"
+name = "camap"
 dynamic = ["version"]
-description = "Package for analyzing place cells"
+description = "CaMAP — Calcium imaging mapping and analysis pipeline"
 license = {text = "AGPL-3.0"}
 readme = "README.md"
+authors = [
+    {name = "t-sasatani", email = "sasatani.dev@gmail.com"},
+]
 
 requires-python = ">=3.11,<3.13"
 dependencies = [
