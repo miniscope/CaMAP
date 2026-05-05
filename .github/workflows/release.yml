@@ -64,7 +64,6 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: dist/*
-          generate_release_notes: true
           body_path: ${{ github.workspace }}/CHANGELOG.md
 
   pypi-publish:
