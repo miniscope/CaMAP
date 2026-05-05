@@ -1,6 +1,6 @@
 # Notebooks
 
-Three notebooks ship in `notebook/`. The two results viewers consume `.pcellbundle` directories produced by `camap analysis`; the calcium trace viewer reads a Minian output directly and does not need a bundle. All three need **Jupyter Lab** for the interactive widgets:
+Three notebooks ship in `notebook/`. The two results viewers consume `.camapbundle` directories produced by `camap analysis`; the calcium trace viewer reads a Minian output directly and does not need a bundle. All three need **Jupyter Lab** for the interactive widgets:
 
 ```bash
 cd notebook && jupyter lab --no-browser
@@ -8,7 +8,7 @@ cd notebook && jupyter lab --no-browser
 
 ## `view_results_arena.ipynb` — 2D arena viewer
 
-Loads one or more arena `.pcellbundle` directories and gives you:
+Loads one or more arena `.camapbundle` directories and gives you:
 
 - **Cross-session summary table**: place-cell counts, significance, and stability fractions across loaded bundles.
 - **Behavior preview**: trajectory density and speed distribution per session.
@@ -31,7 +31,7 @@ Same `BUNDLE_PATHS` convention as the arena viewer.
 
 ## `plot_calcium_traces.ipynb` — raw trace inspection
 
-Standalone Minian viewer — does *not* depend on `.pcellbundle` or the camap pipeline. Reads `C.zarr`, `A.zarr`, and `max_proj.zarr` from a Minian output directory and produces:
+Standalone Minian viewer — does *not* depend on `.camapbundle` or the camap pipeline. Reads `C.zarr`, `A.zarr`, and `max_proj.zarr` from a Minian output directory and produces:
 
 1. Full vertically-stacked traces with auto-distributed zoom panels.
 2. Max projection overlaid with filled colored spatial footprints (colors match the trace panels).

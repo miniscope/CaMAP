@@ -688,7 +688,7 @@ class MazeDataset(BaseCaMAPDataset):
 
     @classmethod
     def load_bundle(cls, path: str | Path) -> "MazeDataset":
-        """Load a saved ``.pcellbundle`` that contains 1D maze data.
+        """Load a saved ``.camapbundle`` that contains 1D maze data.
 
         Restores all base attributes via the parent loader, then adds
         1D-specific state (trajectories, arm boundaries, etc.).

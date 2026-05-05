@@ -51,6 +51,35 @@ def _save_pdf(figures_dir: Path, name: str, builder: Any, saved: list[str]) -> N
         logger.warning("Failed to save %s", name, exc_info=True)
 
 
+def _check_legacy_bundle(path: Path) -> None:
+    """Raise if ``path`` looks like a pre-rename ``.pcellbundle`` directory.
+
+    The bundle format was renamed (extension ``.pcellbundle`` →
+    ``.camapbundle``, metadata key ``placecell_version`` → ``camap_version``)
+    in the placecell→CaMAP rename. Pre-release: no auto-migration; surface
+    a clear error so the user can rename in place.
+    """
+    msg_extension = (
+        f"Bundle '{path.name}' uses the legacy '.pcellbundle' extension. "
+        f"Rename the directory to '{path.with_suffix('.camapbundle').name}' "
+        f"and update its metadata.json key 'placecell_version' → 'camap_version'."
+    )
+    msg_metadata = (
+        f"Bundle '{path}' has the legacy 'placecell_version' metadata key. "
+        f"Rename it to 'camap_version' in metadata.json."
+    )
+    if path.suffix == ".pcellbundle":
+        raise RuntimeError(msg_extension)
+    meta_path = path / "metadata.json"
+    if meta_path.is_file():
+        try:
+            meta = json.loads(meta_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            return  # let the regular load path produce the error
+        if "placecell_version" in meta and "camap_version" not in meta:
+            raise RuntimeError(msg_metadata)
+
+
 def unique_bundle_path(bundle_dir: str | Path, stem: str) -> Path:
     """Return a bundle path, appending ``_1``, ``_2``, ... if it already exists.
 
@@ -64,15 +93,15 @@ def unique_bundle_path(bundle_dir: str | Path, stem: str) -> Path:
     Returns
     -------
     Path
-        A path like ``bundle_dir/stem.pcellbundle`` (or ``stem_1``, ``stem_2``, ...).
+        A path like ``bundle_dir/stem.camapbundle`` (or ``stem_1``, ``stem_2``, ...).
     """
     bundle_dir = Path(bundle_dir)
-    candidate = bundle_dir / f"{stem}.pcellbundle"
+    candidate = bundle_dir / f"{stem}.camapbundle"
     if not candidate.exists():
         return candidate
     i = 1
     while True:
-        candidate = bundle_dir / f"{stem}_{i}.pcellbundle"
+        candidate = bundle_dir / f"{stem}_{i}.camapbundle"
         if not candidate.exists():
             return candidate
         i += 1
@@ -586,7 +615,7 @@ class BaseCaMAPDataset(abc.ABC):
         }
 
     def save_bundle(self, path: str | Path, *, save_figures: bool = True) -> Path:
-        """Save all analysis results to a portable ``.pcellbundle`` directory.
+        """Save all analysis results to a portable ``.camapbundle`` directory.
 
         The bundle is self-contained: it stores config, behavior, neural,
         and per-unit analysis results so that visualizations can be
@@ -595,7 +624,7 @@ class BaseCaMAPDataset(abc.ABC):
         Parameters
         ----------
         path:
-            Output directory. ``.pcellbundle`` is appended if not present.
+            Output directory. ``.camapbundle`` is appended if not present.
 
         Returns
         -------
@@ -603,8 +632,8 @@ class BaseCaMAPDataset(abc.ABC):
             The bundle directory that was created.
         """
         path = Path(path)
-        if path.suffix != ".pcellbundle":
-            path = path.with_suffix(".pcellbundle")
+        if path.suffix != ".camapbundle":
+            path = path.with_suffix(".camapbundle")
 
         # Avoid overwriting: append _1, _2, ... if path already exists
         path = unique_bundle_path(path.parent, path.stem)
@@ -616,7 +645,7 @@ class BaseCaMAPDataset(abc.ABC):
         # ``version`` is the schema version (enforced on load)
         meta = {
             "version": _BUNDLE_VERSION,
-            "placecell_version": _package_version,
+            "camap_version": _package_version,
             "created": datetime.now(UTC).isoformat(),
         }
         (path / "metadata.json").write_text(json.dumps(meta, indent=2))
@@ -973,12 +1002,12 @@ class BaseCaMAPDataset(abc.ABC):
 
     @classmethod
     def load_bundle(cls, path: str | Path) -> "BaseCaMAPDataset":
-        """Load a previously saved ``.pcellbundle`` directory.
+        """Load a previously saved ``.camapbundle`` directory.
 
         Parameters
         ----------
         path:
-            Path to the ``.pcellbundle`` directory.
+            Path to the ``.camapbundle`` directory.
 
         Returns
         -------
@@ -988,6 +1017,7 @@ class BaseCaMAPDataset(abc.ABC):
             original raw data paths are not preserved.
         """
         path = Path(path)
+        _check_legacy_bundle(path)
 
         # Auto-select subclass based on behavior type
         if cls is BaseCaMAPDataset:

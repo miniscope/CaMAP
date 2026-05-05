@@ -154,7 +154,7 @@ For batch processing, see `examples/batch_analysis.py`.
 
 ## Output
 
-The pipeline saves a `.pcellbundle` directory containing all results and summary figures. Key outputs:
+The pipeline saves a `.camapbundle` directory containing all results and summary figures. Key outputs:
 
 - `canonical.parquet` — per-neural-frame table with position, speed, and deconvolved activity per unit
 - `figures/occupancy.pdf` — trajectory density and occupancy with split-half comparison

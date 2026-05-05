@@ -14,7 +14,7 @@ from camap.dataset import BaseCaMAPDataset
 # Config: stem name from camap/config/ or path to a YAML file.
 CONFIG = "example_arena_config"
 
-# Output directory for .pcellbundle files.
+# Output directory for .camapbundle files.
 OUTPUT_DIR = Path("bundle")
 
 # Parallel workers for analyze_units.
@@ -43,7 +43,7 @@ def main() -> None:
         ds.compute_occupancy()
         ds.analyze_units(progress_bar=tqdm, n_workers=WORKERS)
 
-        bundle_path = ds.save_bundle(str(OUTPUT_DIR / f"{name}.pcellbundle"))
+        bundle_path = ds.save_bundle(str(OUTPUT_DIR / f"{name}.camapbundle"))
         print(f"  Saved: {bundle_path}")
 
         s = ds.summary()

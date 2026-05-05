@@ -13,7 +13,7 @@ Both `ArenaDataset` (2D) and `MazeDataset` (1D) implement the same abstract pipe
 5. `match_events()` — interpolate behavior onto neural timestamps, compute speed, build canonical table
 6. `compute_occupancy()` — spatial occupancy map (2D histogram or 1D bins)
 7. `analyze_units()` — per-unit rate map, spatial information, stability, place fields
-8. `save_bundle()` — write `.pcellbundle` directory with config, arrays, parquets, figures, and a `metadata.json` that records both the bundle schema version and the `camap` package version (via `hatch-vcs`, so it includes the git SHA of the build).
+8. `save_bundle()` — write `.camapbundle` directory with config, arrays, parquets, figures, and a `metadata.json` that records both the bundle schema version and the `camap` package version (via `hatch-vcs`, so it includes the git SHA of the build).
 
 Steps 3–4 are gated on which blocks the data config carries: `preprocess_behavior()` is a no-op when no `behavior:` block is present, `deconvolve()` is a no-op when no `neural:` block is present, and the place-cell steps 5–7 require both. This makes neural-only (load → deconvolve → save) and behavior-only (load → preprocess → save) workflows valid out of the box.
 
