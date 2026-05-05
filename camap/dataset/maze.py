@@ -293,8 +293,7 @@ class MazeDataset(BaseCaMAPDataset):
               columns ``frame_index, neural_time, x, y, pos_1d,
               arm_index, [direction], speed_1d, s_unit_*``.
             - ``self.trajectory_1d_filtered`` is the speed-filtered
-              canonical view restricted to arm frames, with
-              ``frame_index`` aliased to ``frame_index``.
+              canonical view restricted to arm frames.
             - ``self.event_place`` is the long-format event table
               derived from the same speed-filtered view.
         """
