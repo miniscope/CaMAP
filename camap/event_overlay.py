@@ -1,7 +1,7 @@
 """Helpers for cell-event overlay and zone-occupancy plots.
 
 These functions operate on a fully-loaded ``BaseCaMAPDataset`` (typically
-restored from a ``.camapbundle``) and are kept generic enough to be reused
+restored from a ``.camap``) and are kept generic enough to be reused
 between the per-session maze viewer and cross-session analyses.
 """
 

@@ -121,7 +121,7 @@ def _run_one(
     if output is None:
         bundle_dir = Path.cwd() / "output"
         bundle_dir.mkdir(parents=True, exist_ok=True)
-        out = str(bundle_dir / f"{data_p.stem}.camapbundle")
+        out = str(bundle_dir / f"{data_p.stem}.camap")
     else:
         out = output
 

@@ -55,13 +55,13 @@ def _check_legacy_bundle(path: Path) -> None:
     """Raise if ``path`` looks like a pre-rename ``.pcellbundle`` directory.
 
     The bundle format was renamed (extension ``.pcellbundle`` →
-    ``.camapbundle``, metadata key ``placecell_version`` → ``camap_version``)
+    ``.camap``, metadata key ``placecell_version`` → ``camap_version``)
     in the placecell→CaMAP rename. Pre-release: no auto-migration; surface
     a clear error so the user can rename in place.
     """
     msg_extension = (
         f"Bundle '{path.name}' uses the legacy '.pcellbundle' extension. "
-        f"Rename the directory to '{path.with_suffix('.camapbundle').name}' "
+        f"Rename the directory to '{path.with_suffix('.camap').name}' "
         f"and update its metadata.json key 'placecell_version' → 'camap_version'."
     )
     msg_metadata = (
@@ -93,15 +93,15 @@ def unique_bundle_path(bundle_dir: str | Path, stem: str) -> Path:
     Returns
     -------
     Path
-        A path like ``bundle_dir/stem.camapbundle`` (or ``stem_1``, ``stem_2``, ...).
+        A path like ``bundle_dir/stem.camap`` (or ``stem_1``, ``stem_2``, ...).
     """
     bundle_dir = Path(bundle_dir)
-    candidate = bundle_dir / f"{stem}.camapbundle"
+    candidate = bundle_dir / f"{stem}.camap"
     if not candidate.exists():
         return candidate
     i = 1
     while True:
-        candidate = bundle_dir / f"{stem}_{i}.camapbundle"
+        candidate = bundle_dir / f"{stem}_{i}.camap"
         if not candidate.exists():
             return candidate
         i += 1
@@ -615,7 +615,7 @@ class BaseCaMAPDataset(abc.ABC):
         }
 
     def save_bundle(self, path: str | Path, *, save_figures: bool = True) -> Path:
-        """Save all analysis results to a portable ``.camapbundle`` directory.
+        """Save all analysis results to a portable ``.camap`` directory.
 
         The bundle is self-contained: it stores config, behavior, neural,
         and per-unit analysis results so that visualizations can be
@@ -624,7 +624,7 @@ class BaseCaMAPDataset(abc.ABC):
         Parameters
         ----------
         path:
-            Output directory. ``.camapbundle`` is appended if not present.
+            Output directory. ``.camap`` is appended if not present.
 
         Returns
         -------
@@ -632,8 +632,8 @@ class BaseCaMAPDataset(abc.ABC):
             The bundle directory that was created.
         """
         path = Path(path)
-        if path.suffix != ".camapbundle":
-            path = path.with_suffix(".camapbundle")
+        if path.suffix != ".camap":
+            path = path.with_suffix(".camap")
 
         # Avoid overwriting: append _1, _2, ... if path already exists
         path = unique_bundle_path(path.parent, path.stem)
@@ -1002,12 +1002,12 @@ class BaseCaMAPDataset(abc.ABC):
 
     @classmethod
     def load_bundle(cls, path: str | Path) -> "BaseCaMAPDataset":
-        """Load a previously saved ``.camapbundle`` directory.
+        """Load a previously saved ``.camap`` directory.
 
         Parameters
         ----------
         path:
-            Path to the ``.camapbundle`` directory.
+            Path to the ``.camap`` directory.
 
         Returns
         -------

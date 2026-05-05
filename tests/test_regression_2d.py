@@ -41,7 +41,7 @@ def pipeline_result() -> ArenaDataset:
 @pytest.fixture(scope="module")
 def reference() -> ArenaDataset:
     """Load the reference bundle."""
-    return BaseCaMAPDataset.load_bundle(REGRESSION_DIR / "reference.camapbundle")
+    return BaseCaMAPDataset.load_bundle(REGRESSION_DIR / "reference.camap")
 
 
 

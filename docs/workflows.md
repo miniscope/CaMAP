@@ -4,7 +4,7 @@ The CLI exposes three commands. Auto-generated flag reference lives in the [CLI 
 
 ## `camap analysis` — run the pipeline
 
-One-shot driver for the analysis pipeline described in [Pipeline Details](pipeline.md). Loads neural + behavior, deconvolves, builds the canonical table, computes occupancy, and writes a `.camapbundle` with results and summary figures.
+One-shot driver for the analysis pipeline described in [Pipeline Details](pipeline.md). Loads neural + behavior, deconvolves, builds the canonical table, computes occupancy, and writes a `.camap` with results and summary figures.
 
 ```bash
 camap analysis -c config.yaml -d data_paths.yaml
@@ -18,7 +18,7 @@ By default it runs through `compute_occupancy()`, saves a QC bundle, then prompt
 camap analysis -c config.yaml -d session_a.yaml -d session_b.yaml -y
 ```
 
-**Output location**: defaults to `./output/{data_path.stem}.camapbundle` next to where you ran the command. Override with `-o`.
+**Output location**: defaults to `./output/{data_path.stem}.camap` next to where you ran the command. Override with `-o`.
 
 **Other useful flags**:
 

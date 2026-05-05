@@ -41,7 +41,7 @@ def pipeline_result() -> MazeDataset:
 @pytest.fixture(scope="module")
 def reference() -> MazeDataset:
     """Load the reference bundle."""
-    ds = BaseCaMAPDataset.load_bundle(REGRESSION_DIR / "reference.camapbundle")
+    ds = BaseCaMAPDataset.load_bundle(REGRESSION_DIR / "reference.camap")
     assert isinstance(ds, MazeDataset)
     return ds
 
@@ -270,7 +270,7 @@ def _copy_regression_to_tmp(tmp_dir: Path) -> Path:
     Returns the path to the copied data_paths.yaml.
     """
     for entry in REGRESSION_DIR.iterdir():
-        if entry.name == "reference.camapbundle":
+        if entry.name == "reference.camap":
             continue
         dst = tmp_dir / entry.name
         if entry.is_dir():
