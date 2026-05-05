@@ -1,4 +1,4 @@
-"""pcell - Package for analyzing place cells."""
+"""placecell - Package for analyzing place cells."""
 
 from pathlib import Path as _Path
 
@@ -6,6 +6,7 @@ from placecell.dataset import (
     ArenaDataset,
     BasePlaceCellDataset,
     MazeDataset,
+    StabilitySplitResult,
     UnitResult,
     unique_bundle_path,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "ArenaDataset",
     "BasePlaceCellDataset",
     "MazeDataset",
+    "StabilitySplitResult",
     "UnitResult",
     "unique_bundle_path",
     "__version__",

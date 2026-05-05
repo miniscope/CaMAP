@@ -12,7 +12,12 @@ from placecell.analysis.spatial_1d import (
     compute_unit_analysis_1d,
 )
 from placecell.config import SpatialMap1DConfig, ZoneDetectionConfig
-from placecell.dataset.base import BasePlaceCellDataset, StabilitySplitResult, UnitResult
+from placecell.dataset.base import (
+    BasePlaceCellDataset,
+    StabilitySplitResult,
+    UnitResult,
+    _save_pdf,
+)
 from placecell.log import init_logger
 from placecell.maze_helper import (
     assign_traversal_direction,
@@ -526,7 +531,6 @@ class MazeDataset(BasePlaceCellDataset):
 
         try:
             import matplotlib
-            import matplotlib.pyplot as _plt
         except ImportError:
             return saved
 
@@ -548,8 +552,10 @@ class MazeDataset(BasePlaceCellDataset):
 
         with matplotlib.rc_context(rc):
             if self.trajectory_1d_filtered is not None and self.occupancy_time is not None:
-                try:
-                    fig = plot_occupancy_preview_1d(
+                _save_pdf(
+                    figures_dir,
+                    "occupancy.pdf",
+                    lambda: plot_occupancy_preview_1d(
                         self.trajectory_1d_filtered,
                         self.occupancy_time,
                         self.valid_mask,
@@ -558,12 +564,9 @@ class MazeDataset(BasePlaceCellDataset):
                         trajectory_1d_all=self.trajectory_1d_all,
                         arm_boundaries=self.arm_boundaries,
                         arm_labels=self.effective_arm_order,
-                    )
-                    fig.savefig(figures_dir / "occupancy.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("occupancy.pdf")
-                except Exception:
-                    logger.warning("Failed to save occupancy.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
             # 2D behavior preview (trajectory density + speed histogram)
             if (
@@ -571,76 +574,64 @@ class MazeDataset(BasePlaceCellDataset):
                 and self.trajectory_1d_filtered is not None
                 and "x" in self.canonical.columns
             ):
-                try:
-                    fig = plot_behavior_preview(
+                _save_pdf(
+                    figures_dir,
+                    "behavior_preview.pdf",
+                    lambda: plot_behavior_preview(
                         self.canonical,
                         self.trajectory_1d_filtered,
                         self.cfg.behavior.speed_threshold,
                         speed_unit="mm/s",
                         speed_column="speed_1d",
-                    )
-                    fig.savefig(
-                        figures_dir / "behavior_preview.pdf",
-                        bbox_inches="tight",
-                    )
-                    _plt.close(fig)
-                    saved.append("behavior_preview.pdf")
-                except Exception:
-                    logger.warning("Failed to save behavior_preview.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
-            # Speed histogram (1D arm speed)
             if self.trajectory_1d is not None and "speed_1d" in self.trajectory_1d.columns:
-                try:
+
+                def _speed_hist_fig() -> Any:
                     speeds = self.trajectory_1d["speed_1d"].to_numpy()
                     n_filt = (
                         len(self.trajectory_1d_filtered)
                         if self.trajectory_1d_filtered is not None
                         else 0
                     )
-                    fig = plot_speed_histogram(
+                    return plot_speed_histogram(
                         speeds,
                         self.cfg.behavior.speed_threshold,
                         speed_unit="mm/s",
                         n_filtered=n_filt,
                         n_total=len(self.trajectory_1d),
                     )
-                    fig.savefig(figures_dir / "speed_histogram.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("speed_histogram.pdf")
-                except Exception:
-                    logger.warning("Failed to save speed_histogram.pdf", exc_info=True)
+
+                _save_pdf(figures_dir, "speed_histogram.pdf", _speed_hist_fig, saved)
 
             if self.unit_results and self.edges_1d is not None:
-                try:
-                    fig = plot_shuffle_test_1d(
+                _save_pdf(
+                    figures_dir,
+                    "population_rate_map.pdf",
+                    lambda: plot_shuffle_test_1d(
                         self.unit_results,
                         self.edges_1d,
                         p_value_threshold=self.p_value_threshold,
                         arm_boundaries=self.arm_boundaries,
                         arm_labels=self.effective_arm_order,
-                    )
-                    fig.savefig(figures_dir / "population_rate_map.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("population_rate_map.pdf")
-                except Exception:
-                    logger.warning("Failed to save population_rate_map.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
-                try:
+                def _pvo_fig() -> Any:
                     pvo_results = compute_dataset_arm_pvo(self, use_place_cells=True)
-                    fig = plot_arm_pvo_grid(
-                        pvo_results,
-                        self.effective_arm_order,
-                    )
-                    fig.savefig(figures_dir / "global_pvo_matrix.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("global_pvo_matrix.pdf")
-                except Exception:
-                    logger.warning("Failed to save global_pvo_matrix.pdf", exc_info=True)
+                    return plot_arm_pvo_grid(pvo_results, self.effective_arm_order)
+
+                _save_pdf(figures_dir, "global_pvo_matrix.pdf", _pvo_fig, saved)
 
             place_cell_results = self.place_cells()
             if place_cell_results and self.trajectory_1d is not None:
-                try:
-                    fig = plot_position_and_traces_1d(
+                _save_pdf(
+                    figures_dir,
+                    "speed_traces.pdf",
+                    lambda: plot_position_and_traces_1d(
                         self.trajectory_1d,
                         place_cell_results,
                         self.edges_1d,
@@ -649,26 +640,22 @@ class MazeDataset(BasePlaceCellDataset):
                         trajectory_1d_filtered=self.trajectory_1d_filtered,
                         arm_boundaries=self.arm_boundaries,
                         arm_labels=self.effective_arm_order,
-                    )
-                    fig.savefig(figures_dir / "speed_traces.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("speed_traces.pdf")
-                except Exception:
-                    logger.warning("Failed to save speed_traces.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
             if self.graph_polylines is not None:
-                try:
-                    fig = plot_graph_overlay(
+                _save_pdf(
+                    figures_dir,
+                    "graph_overlay.pdf",
+                    lambda: plot_graph_overlay(
                         self.graph_polylines,
                         self.graph_mm_per_pixel,
                         arm_order=self.data_cfg.behavior.arm_order,
                         video_frame=self.behavior_video_frame,
-                    )
-                    fig.savefig(figures_dir / "graph_overlay.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("graph_overlay.pdf")
-                except Exception:
-                    logger.warning("Failed to save graph_overlay.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
         return saved
 

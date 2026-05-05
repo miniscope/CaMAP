@@ -14,7 +14,12 @@ from placecell.analysis.spatial_2d import (
 )
 from placecell.behavior import clip_to_arena, correct_perspective, remove_position_jumps
 from placecell.config import BaseSpatialMapConfig
-from placecell.dataset.base import BasePlaceCellDataset, StabilitySplitResult, UnitResult
+from placecell.dataset.base import (
+    BasePlaceCellDataset,
+    StabilitySplitResult,
+    UnitResult,
+    _save_pdf,
+)
 from placecell.loaders import load_behavior_data
 from placecell.log import init_logger
 from placecell.temporal_alignment import (
@@ -473,7 +478,6 @@ class ArenaDataset(BasePlaceCellDataset):
 
         try:
             import matplotlib
-            import matplotlib.pyplot as _plt
         except ImportError:
             return saved
 
@@ -494,9 +498,11 @@ class ArenaDataset(BasePlaceCellDataset):
 
         with matplotlib.rc_context(rc):
             if self.trajectory_filtered is not None and self.occupancy_time is not None:
-                try:
-                    scfg = self.spatial
-                    fig = plot_occupancy_preview(
+                scfg = self.spatial
+                _save_pdf(
+                    figures_dir,
+                    "occupancy.pdf",
+                    lambda: plot_occupancy_preview(
                         self.trajectory_filtered,
                         self.occupancy_time,
                         self.valid_mask,
@@ -507,12 +513,9 @@ class ArenaDataset(BasePlaceCellDataset):
                         block_shift=scfg.block_shift,
                         min_occupancy=scfg.min_occupancy,
                         spatial_sigma=scfg.spatial_sigma,
-                    )
-                    fig.savefig(figures_dir / "occupancy.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("occupancy.pdf")
-                except Exception:
-                    logger.warning("Failed to save occupancy.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
             dbcfg = self.data_cfg.behavior if self.data_cfg else None
             if (
@@ -520,19 +523,18 @@ class ArenaDataset(BasePlaceCellDataset):
                 and dbcfg is not None
                 and getattr(dbcfg, "arena_bounds", None) is not None
             ):
-                try:
-                    fig = plot_arena_calibration(
+                _save_pdf(
+                    figures_dir,
+                    "arena_calibration.pdf",
+                    lambda: plot_arena_calibration(
                         self.trajectory_raw,
                         dbcfg.arena_bounds,
                         arena_size_mm=dbcfg.arena_size_mm,
                         mm_per_px=self.mm_per_px,
                         video_frame=self.behavior_video_frame,
-                    )
-                    fig.savefig(figures_dir / "arena_calibration.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("arena_calibration.pdf")
-                except Exception:
-                    logger.warning("Failed to save arena_calibration.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
             if (
                 hasattr(self, "_preprocess_steps")
@@ -540,62 +542,56 @@ class ArenaDataset(BasePlaceCellDataset):
                 and dbcfg is not None
                 and getattr(dbcfg, "arena_size_mm", None) is not None
             ):
-                try:
-                    fig = plot_preprocess_steps(self._preprocess_steps, dbcfg.arena_size_mm)
-                    fig.savefig(figures_dir / "preprocess_steps.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("preprocess_steps.pdf")
-                except Exception:
-                    logger.warning("Failed to save preprocess_steps.pdf", exc_info=True)
+                _save_pdf(
+                    figures_dir,
+                    "preprocess_steps.pdf",
+                    lambda: plot_preprocess_steps(self._preprocess_steps, dbcfg.arena_size_mm),
+                    saved,
+                )
 
             # Speed distribution (behavior preview with speed histogram)
             if self.canonical is not None and self.trajectory_filtered is not None:
-                try:
-                    fig = plot_behavior_preview(
+                _save_pdf(
+                    figures_dir,
+                    "behavior_preview.pdf",
+                    lambda: plot_behavior_preview(
                         self.canonical,
                         self.trajectory_filtered,
                         self.cfg.behavior.speed_threshold,
                         speed_unit="mm/s" if self.mm_per_px else "px/s",
-                    )
-                    fig.savefig(figures_dir / "behavior_preview.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("behavior_preview.pdf")
-                except Exception:
-                    logger.warning("Failed to save behavior_preview.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
             place_cell_results = self.place_cells()
 
-            # Speed + place cell traces
             if place_cell_results and self.canonical is not None:
-                try:
-                    fig = plot_position_and_traces_2d(
+                _save_pdf(
+                    figures_dir,
+                    "speed_traces.pdf",
+                    lambda: plot_position_and_traces_2d(
                         self.canonical,
                         place_cell_results,
                         behavior_fps=self.neural_fps,
                         speed_threshold=self.cfg.behavior.speed_threshold,
                         trajectory_filtered=self.trajectory_filtered,
                         speed_unit="mm/s" if self.mm_per_px else "px/s",
-                    )
-                    fig.savefig(figures_dir / "speed_traces.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("speed_traces.pdf")
-                except Exception:
-                    logger.warning("Failed to save speed_traces.pdf", exc_info=True)
+                    ),
+                    saved,
+                )
 
             if place_cell_results:
-                try:
+
+                def _coverage_fig() -> Any:
                     coverage_map, _, _ = self.coverage()
-                    fig = plot_coverage(
+                    return plot_coverage(
                         coverage_map,
                         self.x_edges,
                         self.y_edges,
                         self.valid_mask,
                         len(place_cell_results),
                     )
-                    fig.savefig(figures_dir / "coverage.pdf", bbox_inches="tight")
-                    _plt.close(fig)
-                    saved.append("coverage.pdf")
-                except Exception:
-                    logger.warning("Failed to save coverage.pdf", exc_info=True)
+
+                _save_pdf(figures_dir, "coverage.pdf", _coverage_fig, saved)
 
         return saved
