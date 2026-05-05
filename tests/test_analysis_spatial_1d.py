@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from placecell.analysis.spatial_1d import (
+from camap.analysis.spatial_1d import (
     compute_occupancy_map_1d,
     compute_rate_map_1d,
     compute_raw_rate_map_1d,
@@ -137,7 +137,7 @@ class TestSpatialInformation1D:
 
 class TestMinEventsGate1D:
     def _make_scfg(self, min_events: int):
-        from placecell.config import SpatialMap1DConfig
+        from camap.config import SpatialMap1DConfig
         return SpatialMap1DConfig(
             bin_width_mm=1.0,
             min_occupancy=0.0,

@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from placecell.log import init_logger
+from camap.log import init_logger
 
 logger = init_logger(__name__)
 

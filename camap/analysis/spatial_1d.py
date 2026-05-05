@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import gaussian_filter1d
 
-from placecell.config import SpatialMap1DConfig
+from camap.config import SpatialMap1DConfig
 
 
 def gaussian_filter_normalized_1d(

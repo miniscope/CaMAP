@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from placecell.log import init_logger
+from camap.log import init_logger
 
 try:
     import matplotlib.pyplot as plt
@@ -755,7 +755,7 @@ def plot_occupancy_preview(
     """
     from matplotlib.collections import LineCollection
 
-    from placecell.analysis.spatial_2d import gaussian_filter_normalized
+    from camap.analysis.spatial_2d import gaussian_filter_normalized
 
     splits = list(stability_splits) if stability_splits else [10]
     ext = [x_edges[0], x_edges[-1], y_edges[0], y_edges[-1]]

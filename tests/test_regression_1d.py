@@ -5,7 +5,7 @@ compares every output against a saved reference bundle.
 
 To regenerate the reference bundle with low ``n_shuffles`` in the config::
 
-    placecell analysis -c config.yaml -d data.yaml -o tests/assets/regression_1d/reference -y --subset-units 10 --subset-frames 10000
+    camap analysis -c config.yaml -d data.yaml -o tests/assets/regression_1d/reference -y --subset-units 10 --subset-frames 10000
 """
 
 import shutil
@@ -15,8 +15,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from placecell.dataset.base import BasePlaceCellDataset
-from placecell.dataset.maze import MazeDataset
+from camap.dataset.base import BaseCaMAPDataset
+from camap.dataset.maze import MazeDataset
 
 REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_1d"
 
@@ -24,7 +24,7 @@ REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_1d"
 @pytest.fixture(scope="module")
 def pipeline_result() -> MazeDataset:
     """Run the full 1D maze pipeline once for all tests in this module."""
-    ds = BasePlaceCellDataset.from_yaml(
+    ds = BaseCaMAPDataset.from_yaml(
         REGRESSION_DIR / "analysis_config.yaml",
         REGRESSION_DIR / "data_paths.yaml",
     )
@@ -41,7 +41,7 @@ def pipeline_result() -> MazeDataset:
 @pytest.fixture(scope="module")
 def reference() -> MazeDataset:
     """Load the reference bundle."""
-    ds = BasePlaceCellDataset.load_bundle(REGRESSION_DIR / "reference.pcellbundle")
+    ds = BaseCaMAPDataset.load_bundle(REGRESSION_DIR / "reference.camap")
     assert isinstance(ds, MazeDataset)
     return ds
 
@@ -247,7 +247,7 @@ def test_save_load_bundle_roundtrip(
         bundle_path = pipeline_result.save_bundle(
             Path(tmp) / "test", save_figures=False
         )
-        reloaded = BasePlaceCellDataset.load_bundle(bundle_path)
+        reloaded = BaseCaMAPDataset.load_bundle(bundle_path)
 
     assert isinstance(reloaded, MazeDataset)
     assert reloaded.summary() == pipeline_result.summary()
@@ -270,7 +270,7 @@ def _copy_regression_to_tmp(tmp_dir: Path) -> Path:
     Returns the path to the copied data_paths.yaml.
     """
     for entry in REGRESSION_DIR.iterdir():
-        if entry.name == "reference.pcellbundle":
+        if entry.name == "reference.camap":
             continue
         dst = tmp_dir / entry.name
         if entry.is_dir():
@@ -289,7 +289,7 @@ def test_load_auto_runs_detect_zones_when_missing() -> None:
         zone_csv.unlink()  # delete the cached projection
         assert not zone_csv.exists()
 
-        ds = BasePlaceCellDataset.from_yaml(
+        ds = BaseCaMAPDataset.from_yaml(
             REGRESSION_DIR / "analysis_config.yaml",
             data_path,
         )
@@ -315,7 +315,7 @@ def test_zone_tracking_path_defaults_when_unset() -> None:
         data_path.write_text(text + "\n")
         (tmp_dir / "zone_tracking.csv").unlink()
 
-        ds = BasePlaceCellDataset.from_yaml(
+        ds = BaseCaMAPDataset.from_yaml(
             REGRESSION_DIR / "analysis_config.yaml",
             data_path,
         )
@@ -336,7 +336,7 @@ def test_load_force_redetect_overwrites_existing_csv() -> None:
         assert zone_csv.exists()
         before_mtime = zone_csv.stat().st_mtime_ns
 
-        ds = BasePlaceCellDataset.from_yaml(
+        ds = BaseCaMAPDataset.from_yaml(
             REGRESSION_DIR / "analysis_config.yaml",
             data_path,
         )

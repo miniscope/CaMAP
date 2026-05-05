@@ -1,16 +1,16 @@
 # Installation
 
-> **Note:** PyPI distribution is planned. For now, install directly from GitHub.
-
 ```bash
-pip install git+https://github.com/miniscope/placecell.git
+pip install camap
 ```
+
+CaMAP is alpha-stage in `0.x` — APIs may change between minor releases.
 
 ## Install oasis-deconv (required for deconvolution)
 
-placecell uses [`oasis-deconv`](https://github.com/j-friedrich/OASIS) for
+CaMAP uses [`oasis-deconv`](https://github.com/j-friedrich/OASIS) for
 its deconvolution step. It is **required** for the full pipeline but
-**not bundled** with placecell — PyPI wheel coverage is patchy (arm64
+**not bundled** with CaMAP — PyPI wheel coverage is patchy (arm64
 macOS only), so we leave the install path to you:
 
 ```bash
@@ -27,7 +27,7 @@ If the source build fails, that is an upstream issue — see the
 ## Development
 
 ```bash
-git clone https://github.com/miniscope/placecell.git
-cd placecell
+git clone https://github.com/miniscope/camap.git
+cd camap
 uv sync --extra all
 ```

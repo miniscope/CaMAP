@@ -6,23 +6,23 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from placecell.analysis.spatial_2d import (
+from camap.analysis.spatial_2d import (
     compute_coverage_curve,
     compute_coverage_map,
     compute_occupancy_map,
     compute_unit_analysis,
 )
-from placecell.behavior import clip_to_arena, correct_perspective, remove_position_jumps
-from placecell.config import BaseSpatialMapConfig
-from placecell.dataset.base import (
-    BasePlaceCellDataset,
+from camap.behavior import clip_to_arena, correct_perspective, remove_position_jumps
+from camap.config import BaseSpatialMapConfig
+from camap.dataset.base import (
+    BaseCaMAPDataset,
     StabilitySplitResult,
     UnitResult,
     _save_pdf,
 )
-from placecell.loaders import load_behavior_data
-from placecell.log import init_logger
-from placecell.temporal_alignment import (
+from camap.loaders import load_behavior_data
+from camap.log import init_logger
+from camap.temporal_alignment import (
     build_canonical_table,
     compute_speed_2d,
     derive_event_place_from_canonical,
@@ -33,7 +33,7 @@ from placecell.temporal_alignment import (
 logger = init_logger(__name__)
 
 
-class ArenaDataset(BasePlaceCellDataset):
+class ArenaDataset(BaseCaMAPDataset):
     """Dataset for 2D open-field arena place cell analysis.
 
     Adds arena-specific functionality: perspective correction scale
@@ -481,7 +481,7 @@ class ArenaDataset(BasePlaceCellDataset):
         except ImportError:
             return saved
 
-        from placecell.visualization import (
+        from camap.visualization import (
             plot_arena_calibration,
             plot_behavior_preview,
             plot_coverage,

@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from placecell.geometry import (
+from camap.geometry import (
     closest_point_on_polyline_prepared,
     get_zone_probabilities,
     min_distance_to_polyline_prepared,

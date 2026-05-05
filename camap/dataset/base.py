@@ -12,22 +12,22 @@ import pandas as pd
 import xarray as xr
 import yaml
 
-from placecell.config import (
+from camap.config import (
     CONFIG_DIR,
     AnalysisConfig,
     BaseSpatialMapConfig,
     DataConfig,
     MazeBehaviorDataConfig,
 )
-from placecell.loaders import load_visualization_data
-from placecell.log import init_logger
-from placecell.neural import load_calcium_traces, run_deconvolution
+from camap.loaders import load_visualization_data
+from camap.log import init_logger
+from camap.neural import load_calcium_traces, run_deconvolution
 
 logger = init_logger(__name__)
 
 _BUNDLE_VERSION = 1
 """Bundle schema version. Bump only on on-disk layout changes
-(field rename, file added/removed, dtype change). The ``placecell``
+(field rename, file added/removed, dtype change). The ``camap``
 package version is recorded separately in ``metadata.json`` and does
 not affect this number."""
 
@@ -51,6 +51,35 @@ def _save_pdf(figures_dir: Path, name: str, builder: Any, saved: list[str]) -> N
         logger.warning("Failed to save %s", name, exc_info=True)
 
 
+def _check_legacy_bundle(path: Path) -> None:
+    """Raise if ``path`` looks like a pre-rename ``.pcellbundle`` directory.
+
+    The bundle format was renamed (extension ``.pcellbundle`` →
+    ``.camap``, metadata key ``placecell_version`` → ``camap_version``)
+    in the placecell→CaMAP rename. Pre-release: no auto-migration; surface
+    a clear error so the user can rename in place.
+    """
+    msg_extension = (
+        f"Bundle '{path.name}' uses the legacy '.pcellbundle' extension. "
+        f"Rename the directory to '{path.with_suffix('.camap').name}' "
+        f"and update its metadata.json key 'placecell_version' → 'camap_version'."
+    )
+    msg_metadata = (
+        f"Bundle '{path}' has the legacy 'placecell_version' metadata key. "
+        f"Rename it to 'camap_version' in metadata.json."
+    )
+    if path.suffix == ".pcellbundle":
+        raise RuntimeError(msg_extension)
+    meta_path = path / "metadata.json"
+    if meta_path.is_file():
+        try:
+            meta = json.loads(meta_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            return  # let the regular load path produce the error
+        if "placecell_version" in meta and "camap_version" not in meta:
+            raise RuntimeError(msg_metadata)
+
+
 def unique_bundle_path(bundle_dir: str | Path, stem: str) -> Path:
     """Return a bundle path, appending ``_1``, ``_2``, ... if it already exists.
 
@@ -64,15 +93,15 @@ def unique_bundle_path(bundle_dir: str | Path, stem: str) -> Path:
     Returns
     -------
     Path
-        A path like ``bundle_dir/stem.pcellbundle`` (or ``stem_1``, ``stem_2``, ...).
+        A path like ``bundle_dir/stem.camap`` (or ``stem_1``, ``stem_2``, ...).
     """
     bundle_dir = Path(bundle_dir)
-    candidate = bundle_dir / f"{stem}.pcellbundle"
+    candidate = bundle_dir / f"{stem}.camap"
     if not candidate.exists():
         return candidate
     i = 1
     while True:
-        candidate = bundle_dir / f"{stem}_{i}.pcellbundle"
+        candidate = bundle_dir / f"{stem}_{i}.camap"
         if not candidate.exists():
             return candidate
         i += 1
@@ -194,12 +223,12 @@ class UnitResult:
         return all(not np.isnan(s.p_val) and s.p_val < p_threshold for s in self.stability_splits)
 
 
-class BasePlaceCellDataset(abc.ABC):
+class BaseCaMAPDataset(abc.ABC):
     """Base class for place cell analysis datasets.
 
     Shared pipeline (each step populates attributes for the next)::
 
-        ds = BasePlaceCellDataset.from_yaml(config_path, data_path)
+        ds = BaseCaMAPDataset.from_yaml(config_path, data_path)
         ds.load()                            # traces, trajectory, footprints
         ds.preprocess_behavior()             # corrections + speed filter
         ds.deconvolve(progress_bar=tqdm)     # good_unit_ids, S_list
@@ -277,14 +306,14 @@ class BasePlaceCellDataset(abc.ABC):
         self.unit_results: dict[int, UnitResult] = {}
 
     @classmethod
-    def from_yaml(cls, config: str | Path, data_path: str | Path) -> "BasePlaceCellDataset":
+    def from_yaml(cls, config: str | Path, data_path: str | Path) -> "BaseCaMAPDataset":
         """Create dataset from analysis config and data paths file.
 
         Parameters
         ----------
         config:
             Path to analysis config YAML, or a stem name matching a
-            bundled config in ``placecell/config/`` (e.g. ``"example_arena_config"``).
+            bundled config in ``camap/config/`` (e.g. ``"example_arena_config"``).
         data_path:
             Path to the per-session data paths YAML file.
         """
@@ -307,11 +336,11 @@ class BasePlaceCellDataset(abc.ABC):
         # (load → deconvolve) match neural-only usage.
         klass = cls
         if isinstance(bcfg, MazeBehaviorDataConfig):
-            from placecell.dataset.maze import MazeDataset
+            from camap.dataset.maze import MazeDataset
 
             klass = MazeDataset
-        elif cls is BasePlaceCellDataset:
-            from placecell.dataset.arena import ArenaDataset
+        elif cls is BaseCaMAPDataset:
+            from camap.dataset.arena import ArenaDataset
 
             klass = ArenaDataset
 
@@ -371,7 +400,7 @@ class BasePlaceCellDataset(abc.ABC):
         quality immediately after ``load()``, before waiting for
         deconvolution.
         """
-        from placecell.dataset_validation import infer_fps, validate_neural_timestamps
+        from camap.dataset_validation import infer_fps, validate_neural_timestamps
 
         ts_df = pd.read_csv(self.neural_timestamp_path)
         if "timestamp_first" not in ts_df.columns:
@@ -586,7 +615,7 @@ class BasePlaceCellDataset(abc.ABC):
         }
 
     def save_bundle(self, path: str | Path, *, save_figures: bool = True) -> Path:
-        """Save all analysis results to a portable ``.pcellbundle`` directory.
+        """Save all analysis results to a portable ``.camap`` directory.
 
         The bundle is self-contained: it stores config, behavior, neural,
         and per-unit analysis results so that visualizations can be
@@ -595,7 +624,7 @@ class BasePlaceCellDataset(abc.ABC):
         Parameters
         ----------
         path:
-            Output directory. ``.pcellbundle`` is appended if not present.
+            Output directory. ``.camap`` is appended if not present.
 
         Returns
         -------
@@ -603,20 +632,20 @@ class BasePlaceCellDataset(abc.ABC):
             The bundle directory that was created.
         """
         path = Path(path)
-        if path.suffix != ".pcellbundle":
-            path = path.with_suffix(".pcellbundle")
+        if path.suffix != ".camap":
+            path = path.with_suffix(".camap")
 
         # Avoid overwriting: append _1, _2, ... if path already exists
         path = unique_bundle_path(path.parent, path.stem)
 
         path.mkdir(parents=True, exist_ok=True)
 
-        from placecell import __version__ as _package_version
+        from camap import __version__ as _package_version
 
         # ``version`` is the schema version (enforced on load)
         meta = {
             "version": _BUNDLE_VERSION,
-            "placecell_version": _package_version,
+            "camap_version": _package_version,
             "created": datetime.now(UTC).isoformat(),
         }
         (path / "metadata.json").write_text(json.dumps(meta, indent=2))
@@ -705,7 +734,7 @@ class BasePlaceCellDataset(abc.ABC):
             logger.warning("matplotlib not available — skipping figure export")
             return []
 
-        from placecell.visualization import (
+        from camap.visualization import (
             plot_diagnostics,
             plot_footprints_filled,
             plot_stability_splits_summary,
@@ -849,7 +878,7 @@ class BasePlaceCellDataset(abc.ABC):
             pd.concat(parts, ignore_index=True).to_parquet(ur_dir / "events.parquet")
 
     @classmethod
-    def _load_bundle_data(cls, path: Path) -> "BasePlaceCellDataset":
+    def _load_bundle_data(cls, path: Path) -> "BaseCaMAPDataset":
         """Load bundle data into a *cls* instance (no subclass auto-selection).
 
         Handles metadata validation, config loading, and restoration of all
@@ -913,7 +942,7 @@ class BasePlaceCellDataset(abc.ABC):
         # downstream consumers (notebook browser, regression tests) see
         # the same DataFrames as a freshly-run pipeline.
         if ds.canonical is not None:
-            from placecell.temporal_alignment import (
+            from camap.temporal_alignment import (
                 derive_event_place_from_canonical,
                 filter_canonical_by_speed,
             )
@@ -972,34 +1001,35 @@ class BasePlaceCellDataset(abc.ABC):
         return ds
 
     @classmethod
-    def load_bundle(cls, path: str | Path) -> "BasePlaceCellDataset":
-        """Load a previously saved ``.pcellbundle`` directory.
+    def load_bundle(cls, path: str | Path) -> "BaseCaMAPDataset":
+        """Load a previously saved ``.camap`` directory.
 
         Parameters
         ----------
         path:
-            Path to the ``.pcellbundle`` directory.
+            Path to the ``.camap`` directory.
 
         Returns
         -------
-        BasePlaceCellDataset
+        BaseCaMAPDataset
             Dataset with all attributes restored. Recomputation methods
             (``load``, ``deconvolve``, etc.) are unavailable since the
             original raw data paths are not preserved.
         """
         path = Path(path)
+        _check_legacy_bundle(path)
 
         # Auto-select subclass based on behavior type
-        if cls is BasePlaceCellDataset:
+        if cls is BaseCaMAPDataset:
             if not path.is_dir():
                 raise FileNotFoundError(f"Bundle not found: {path}")
             cfg = AnalysisConfig.from_yaml(path / "config.yaml")
             if cfg.behavior and cfg.behavior.type == "maze":
-                from placecell.dataset.maze import MazeDataset
+                from camap.dataset.maze import MazeDataset
 
                 return MazeDataset.load_bundle(path)
 
-            from placecell.dataset.arena import ArenaDataset
+            from camap.dataset.arena import ArenaDataset
 
             return ArenaDataset._load_bundle_data(path)
 

@@ -5,10 +5,10 @@ test:
 
 lint:
 	uv run ruff check
-	uv run black placecell --diff
+	uv run black camap --diff
 
 format:
-	uv run black placecell
+	uv run black camap
 	uv run ruff check --fix
 
 docs:

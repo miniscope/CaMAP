@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pytest
-from placecell.analysis.pvo_1d import compute_arm_pvo
+from camap.analysis.pvo_1d import compute_arm_pvo
 
 
 def _res(rate_map: list[float]) -> SimpleNamespace:

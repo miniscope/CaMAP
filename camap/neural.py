@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import xarray as xr
 
-from placecell.log import init_logger
+from camap.log import init_logger
 
 logger = init_logger(__name__)
 
@@ -101,7 +101,7 @@ def run_deconvolution(
         except ImportError as exc:
             raise ImportError(
                 "oasis-deconv is required for deconvolution but is not bundled "
-                "with placecell. Recommended: "
+                "with camap. Recommended: "
                 "'pip install --no-binary oasis-deconv oasis-deconv' "
                 "(source build, needs a C compiler). Alternative: "
                 "'conda install -c conda-forge oasis-deconv' (prebuilt). "

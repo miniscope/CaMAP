@@ -1,9 +1,31 @@
 [project]
-name = "placecell"
+name = "camap"
 dynamic = ["version"]
-description = "Package for analyzing place cells"
+description = "CaMAP — Calcium imaging mapping and analysis pipeline"
 license = {text = "AGPL-3.0"}
 readme = "README.md"
+authors = [
+    {name = "t-sasatani", email = "sasatani.dev@gmail.com"},
+]
+keywords = [
+    "neuroscience",
+    "calcium-imaging",
+    "place-cells",
+    "spatial-coding",
+    "hippocampus",
+    "miniscope",
+    "deconvolution",
+    "rate-maps",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 
 requires-python = ">=3.11,<3.13"
 dependencies = [
@@ -23,8 +45,14 @@ dependencies = [
     "opencv-python>=4.13.0.92",
 ]
 
+[project.urls]
+Homepage = "https://miniscope.github.io/camap/"
+Documentation = "https://miniscope.github.io/camap/"
+Repository = "https://github.com/miniscope/camap"
+Issues = "https://github.com/miniscope/camap/issues"
+
 [project.scripts]
-placecell = "placecell.cli:cli"
+camap = "camap.cli:cli"
 
 [project.optional-dependencies]
 notebook = [
@@ -59,7 +87,7 @@ zones = [
     "opencv-python>=4.5.0",
 ]
 all = [
-    "placecell[notebook,dev,tests,docs]",
+    "camap[notebook,dev,tests,docs]",
 ]
 
 [build-system]
@@ -70,18 +98,18 @@ build-backend = "hatchling.build"
 source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
-version-file = "placecell/_version.py"
+version-file = "camap/_version.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["placecell"]
+packages = ["camap"]
 
 [tool.uv]
 no-binary-package = ["oasis-deconv"]
 
 [tool.ruff]
 target-version = "py311"
-include = ["placecell/**/*.py", "notebook/**/*.ipynb", "pyproject.toml"]
-exclude = ["docs", "tests", "placecell/assets", "placecell/_version.py"]
+include = ["camap/**/*.py", "notebook/**/*.ipynb", "pyproject.toml"]
+exclude = ["docs", "tests", "camap/assets", "camap/_version.py"]
 line-length = 100
 
 [tool.ruff.lint]
@@ -127,7 +155,7 @@ ignore = [
 
 [tool.black]
 target-version = ['py311', 'py312']
-include = "placecell/.*\\.py$"
+include = "camap/.*\\.py$"
 line-length = 100
 
 [tool.pytest.ini_options]
@@ -140,5 +168,5 @@ markers = [
 
 [tool.coverage.run]
 omit = [
-    "placecell/visualization.py",
+    "camap/visualization.py",
 ]

@@ -9,12 +9,12 @@ from pathlib import Path
 import pandas as pd
 from tqdm.auto import tqdm
 
-from placecell.dataset import BasePlaceCellDataset
+from camap.dataset import BaseCaMAPDataset
 
-# Config: stem name from placecell/config/ or path to a YAML file.
+# Config: stem name from camap/config/ or path to a YAML file.
 CONFIG = "example_arena_config"
 
-# Output directory for .pcellbundle files.
+# Output directory for .camap files.
 OUTPUT_DIR = Path("bundle")
 
 # Parallel workers for analyze_units.
@@ -35,7 +35,7 @@ def main() -> None:
         name = data_path.stem
         print(f"\n[{i + 1}/{len(SESSIONS)}] {name}")
 
-        ds = BasePlaceCellDataset.from_yaml(CONFIG, data_path)
+        ds = BaseCaMAPDataset.from_yaml(CONFIG, data_path)
         ds.load()
         ds.preprocess_behavior()
         ds.deconvolve(progress_bar=tqdm)
@@ -43,7 +43,7 @@ def main() -> None:
         ds.compute_occupancy()
         ds.analyze_units(progress_bar=tqdm, n_workers=WORKERS)
 
-        bundle_path = ds.save_bundle(str(OUTPUT_DIR / f"{name}.pcellbundle"))
+        bundle_path = ds.save_bundle(str(OUTPUT_DIR / f"{name}.camap"))
         print(f"  Saved: {bundle_path}")
 
         s = ds.summary()

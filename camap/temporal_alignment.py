@@ -3,12 +3,12 @@
 import numpy as np
 import pandas as pd
 
-from placecell.dataset_validation import (
+from camap.dataset_validation import (
     infer_fps,
     validate_neural_timestamps,
     validate_temporal_overlap,
 )
-from placecell.log import init_logger
+from camap.log import init_logger
 
 logger = init_logger(__name__)
 

@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from placecell.behavior import remove_position_jumps
-from placecell.geometry import (
+from camap.behavior import remove_position_jumps
+from camap.geometry import (
     closest_point_on_polyline_prepared,
     get_zone_probabilities,
     is_valid_transition,
@@ -15,8 +15,8 @@ from placecell.geometry import (
     position_along_polyline_prepared,
     prepare_zone_geometry,
 )
-from placecell.log import init_logger
-from placecell.temporal_alignment import interpolate_behavior_onto_neural
+from camap.log import init_logger
+from camap.temporal_alignment import interpolate_behavior_onto_neural
 
 logger = init_logger(__name__)
 _EMPTY_TRANSITIONS: frozenset[str] = frozenset()
@@ -565,7 +565,7 @@ def detect_zones_from_csv(
 
     zone_polygons, zone_types, file_graph = load_zone_config(zone_config_path)
     if zone_connections is not None:
-        from placecell.geometry import build_zone_graph
+        from camap.geometry import build_zone_graph
 
         zone_graph = build_zone_graph(zone_connections)
     else:

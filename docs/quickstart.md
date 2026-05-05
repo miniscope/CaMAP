@@ -1,6 +1,6 @@
 # Quickstart
 
-`placecell` supports two workflows:
+`camap` supports two workflows:
 
 - `arena` for 2D open-field analysis
 - `maze` for 1D arm/graph-based analysis
@@ -73,11 +73,11 @@ behavior:
 ```
 :::
 
-`placecell` is scorer-agnostic for DLC-style CSVs; configure the correct `bodypart`, and the scorer name is read from the file header.
+`camap` is scorer-agnostic for DLC-style CSVs; configure the correct `bodypart`, and the scorer name is read from the file header.
 
 ### 1b. Maze: zone detection
 
-For maze sessions, the analysis pipeline projects the trajectory onto a zone graph at the neural sample rate. `placecell analysis` will run zone detection automatically on first use, so for a basic run you can skip ahead. See [CLI Workflows](workflows.md) for the `define-zones` → `detect-zones` flow when you want to author the zone graph or iterate on detection parameters.
+For maze sessions, the analysis pipeline projects the trajectory onto a zone graph at the neural sample rate. `camap analysis` will run zone detection automatically on first use, so for a basic run you can skip ahead. See [CLI Workflows](workflows.md) for the `define-zones` → `detect-zones` flow when you want to author the zone graph or iterate on detection parameters.
 
 ### 2. Create analysis config
 
@@ -132,15 +132,15 @@ behavior:
 ### 3. Run the analysis
 
 ```bash
-placecell analysis -c config.yaml -d data_paths.yaml
+camap analysis -c config.yaml -d data_paths.yaml
 ```
 
 Or via Python:
 
 ```python
-from placecell.dataset import BasePlaceCellDataset
+from camap.dataset import BaseCaMAPDataset
 
-ds = BasePlaceCellDataset.from_yaml("config.yaml", "data_paths.yaml")
+ds = BaseCaMAPDataset.from_yaml("config.yaml", "data_paths.yaml")
 ds.load()
 ds.preprocess_behavior()
 ds.deconvolve()
@@ -154,7 +154,7 @@ For batch processing, see `examples/batch_analysis.py`.
 
 ## Output
 
-The pipeline saves a `.pcellbundle` directory containing all results and summary figures. Key outputs:
+The pipeline saves a `.camap` directory containing all results and summary figures. Key outputs:
 
 - `canonical.parquet` — per-neural-frame table with position, speed, and deconvolved activity per unit
 - `figures/occupancy.pdf` — trajectory density and occupancy with split-half comparison

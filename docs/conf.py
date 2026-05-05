@@ -2,10 +2,10 @@
 
 from importlib.metadata import version as get_version
 
-project = "placecell"
-copyright = "2025, Takuya Sasatani"
+project = "CaMAP"
+copyright = "2026, Takuya Sasatani"
 author = "t-sasatani"
-release = get_version("placecell")
+release = get_version("camap")
 version = ".".join(release.split(".")[:2])
 # Shorten dev version: 0.1.1.dev2+g3321b8196.d20260117 -> 0.1.1.dev2+g3321b81
 if "+" in release:
@@ -39,14 +39,15 @@ myst_enable_extensions = [
 ]
 
 myst_fence_as_directive = ["mermaid"]
+myst_heading_anchors = 3
 
 html_theme = "sphinx_book_theme"
-html_title = "placecell"
+html_title = "CaMAP"
 
 html_theme_options = {
     "show_toc_level": 2,
     "toc_title": "On this page",
-    "repository_url": "https://github.com/miniscope/placecell",
+    "repository_url": "https://github.com/miniscope/camap",
     "use_repository_button": True,
     "show_navbar_depth": 1,
     "announcement": f"Version: v{short_release}",

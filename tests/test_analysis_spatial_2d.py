@@ -7,16 +7,16 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from placecell.analysis.spatial_2d import (
+from camap.analysis.spatial_2d import (
     compute_occupancy_map,
     compute_rate_map,
     compute_spatial_information,
     compute_unit_analysis,
     gaussian_filter_normalized,
 )
-from placecell.temporal_alignment import compute_speed_2d
-from placecell.config import SpatialMap2DConfig
-from placecell.neural import load_calcium_traces
+from camap.temporal_alignment import compute_speed_2d
+from camap.config import SpatialMap2DConfig
+from camap.neural import load_calcium_traces
 
 
 def test_load_calcium_traces_shape(neural_path: Path) -> None:

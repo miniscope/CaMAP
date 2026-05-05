@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from placecell.config import (
+from camap.config import (
     AnalysisConfig,
     ArenaBehaviorDataConfig,
     DataConfig,

@@ -1,17 +1,17 @@
 """Dataset classes for place cell analysis."""
 
-from placecell.dataset.arena import ArenaDataset
-from placecell.dataset.base import (
-    BasePlaceCellDataset,
+from camap.dataset.arena import ArenaDataset
+from camap.dataset.base import (
+    BaseCaMAPDataset,
     StabilitySplitResult,
     UnitResult,
     unique_bundle_path,
 )
-from placecell.dataset.maze import MazeDataset
+from camap.dataset.maze import MazeDataset
 
 __all__ = [
     "ArenaDataset",
-    "BasePlaceCellDataset",
+    "BaseCaMAPDataset",
     "MazeDataset",
     "StabilitySplitResult",
     "UnitResult",

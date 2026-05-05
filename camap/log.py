@@ -1,8 +1,8 @@
-"""Logging utilities for placecell."""
+"""Logging utilities for camap."""
 
 import logging
 
-_ROOT = "placecell"
+_ROOT = "camap"
 
 
 def init_logger(name: str, level: str = "INFO") -> logging.Logger:
@@ -12,7 +12,7 @@ def init_logger(name: str, level: str = "INFO") -> logging.Logger:
     ----------
     name:
         Logger name (e.g. ``__name__``). Automatically namespaced
-        under ``placecell.``.
+        under ``camap.``.
     level:
         Logging level (DEBUG, INFO, WARNING, ERROR).
     """
