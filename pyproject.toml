@@ -24,10 +24,11 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "numpy>=1.24.0",
     "pandas>=2.0.0",
@@ -46,10 +47,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://miniscope.github.io/camap/"
-Documentation = "https://miniscope.github.io/camap/"
-Repository = "https://github.com/miniscope/camap"
-Issues = "https://github.com/miniscope/camap/issues"
+Homepage = "https://miniscope.github.io/CaMAP/"
+Documentation = "https://miniscope.github.io/CaMAP/"
+Repository = "https://github.com/miniscope/CaMAP"
+Issues = "https://github.com/miniscope/CaMAP/issues"
 
 [project.scripts]
 camap = "camap.cli:cli"
@@ -154,7 +155,7 @@ ignore = [
 ]
 
 [tool.black]
-target-version = ['py311', 'py312']
+target-version = ['py311', 'py312', 'py313']
 include = "camap/.*\\.py$"
 line-length = 100
 

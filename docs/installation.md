@@ -27,7 +27,7 @@ If the source build fails, that is an upstream issue — see the
 ## Development
 
 ```bash
-git clone https://github.com/miniscope/camap.git
+git clone https://github.com/miniscope/CaMAP.git
 cd camap
 uv sync --extra all
 ```

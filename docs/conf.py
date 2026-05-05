@@ -47,7 +47,7 @@ html_title = "CaMAP"
 html_theme_options = {
     "show_toc_level": 2,
     "toc_title": "On this page",
-    "repository_url": "https://github.com/miniscope/camap",
+    "repository_url": "https://github.com/miniscope/CaMAP",
     "use_repository_button": True,
     "show_navbar_depth": 1,
     "announcement": f"Version: v{short_release}",

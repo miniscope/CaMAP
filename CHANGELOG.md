@@ -1,11 +1,24 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 While the major version is `0.x`, breaking API changes may land in any release;
 treat the package as alpha-stage until `1.0`.
+
+## [0.1.1] — 2026-05-06
+
+### Fixed
+
+- Project URLs in `pyproject.toml`, `README.md`, and docs now use the
+  canonical PascalCase GitHub repository name `miniscope/CaMAP`. The
+  previously-listed lowercase paths returned 404 on GitHub Pages (which
+  is case-sensitive on case-sensitive filesystems).
+
+### Added
+
+- Python 3.13 support (`requires-python = ">=3.11,<3.14"`). PyPI classifier
+  and black `target-version` updated; the matrix in `test.yml` already
+  exercised 3.13.
 
 ## [0.1.0] — 2026-05-05
 

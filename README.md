@@ -1,6 +1,6 @@
 # CaMAP
 
-[![Tests](https://github.com/miniscope/camap/actions/workflows/test.yml/badge.svg)](https://github.com/miniscope/camap/actions/workflows/test.yml)
+[![Tests](https://github.com/miniscope/CaMAP/actions/workflows/test.yml/badge.svg)](https://github.com/miniscope/CaMAP/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/camap.svg)](https://pypi.org/project/camap/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
@@ -18,7 +18,7 @@ pip install camap
 ```
 
 `oasis-deconv` is required for the deconvolution step; see
-[Installation](https://miniscope.github.io/camap/installation.html) for the
+[Installation](https://miniscope.github.io/CaMAP/installation.html) for the
 recommended install path.
 
 ## Minimum example
@@ -38,9 +38,9 @@ ds.save_bundle("output/session_name")
 
 ## Documentation
 
-- [Installation](https://miniscope.github.io/camap/installation.html)
-- [Quickstart](https://miniscope.github.io/camap/quickstart.html)
-- [Pipeline Details](https://miniscope.github.io/camap/pipeline.html)
+- [Installation](https://miniscope.github.io/CaMAP/installation.html)
+- [Quickstart](https://miniscope.github.io/CaMAP/quickstart.html)
+- [Pipeline Details](https://miniscope.github.io/CaMAP/pipeline.html)
 
 ## License
 
