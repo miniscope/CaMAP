@@ -5,6 +5,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the major version is `0.x`, breaking API changes may land in any release;
 treat the package as alpha-stage until `1.0`.
 
+## [0.1.2] — 2026-05-06
+
+### Fixed
+
+- Stability shuffle no longer injects `0.0` for degenerate iterations;
+  the p-value denominator now uses the count of valid shuffles
+  (Phipson & Smyth 2010). Previously anti-conservative for stable units
+  on sparse or short sessions.
+
+### Changed
+
+- Arena `preprocess_behavior` step order: `perspective → Hampel → clip
+  → mm` (was Hampel first). Bundle outputs unchanged for existing data.
+- `oasis-deconv` `ImportError` reformatted with install commands on
+  separate lines.
+
 ## [0.1.1] — 2026-05-06
 
 ### Fixed
