@@ -6,6 +6,9 @@ import numpy as np
 import pandas as pd
 
 from camap.dataset_validation import hampel_mask
+from camap.log import init_logger
+
+logger = init_logger(__name__)
 
 
 def _load_behavior_xy(
@@ -155,7 +158,9 @@ def clip_to_arena(
     """Clip positions to arena boundaries.
 
     Points outside the arena (from detection errors) are clamped to the
-    nearest boundary edge.
+    nearest boundary edge. The number of clamped frames and the maximum
+    out-of-bounds deviation are logged at INFO so the silent-data-repair
+    warning of the review's "no silent data repair" policy is satisfied.
 
     Parameters
     ----------
@@ -169,7 +174,26 @@ def clip_to_arena(
     DataFrame with ``x``, ``y`` clipped to arena bounds.
     """
     x_min, x_max, y_min, y_max = arena_bounds
+    x = positions["x"].to_numpy(dtype=float)
+    y = positions["y"].to_numpy(dtype=float)
+
+    # Per-axis out-of-bounds amount (zero when in-bounds, NaN propagates).
+    dx = np.maximum(0.0, np.maximum(x_min - x, x - x_max))
+    dy = np.maximum(0.0, np.maximum(y_min - y, y - y_max))
+    out_of_bounds = (dx > 0) | (dy > 0)
+    n_clamped = int(np.sum(out_of_bounds))
+
+    if n_clamped > 0:
+        max_dev = float(np.nanmax(np.where(out_of_bounds, np.hypot(dx, dy), 0.0)))
+        n_total = len(positions)
+        logger.info(
+            "clip_to_arena: %d/%d frames clamped (max deviation %.2f px from boundary).",
+            n_clamped,
+            n_total,
+            max_dev,
+        )
+
     df = positions.copy()
-    df["x"] = df["x"].clip(x_min, x_max)
-    df["y"] = df["y"].clip(y_min, y_max)
+    df["x"] = np.clip(x, x_min, x_max)
+    df["y"] = np.clip(y, y_min, y_max)
     return df

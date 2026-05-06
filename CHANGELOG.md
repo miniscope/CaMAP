@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the major version is `0.x`, breaking API changes may land in any release;
 treat the package as alpha-stage until `1.0`.
 
+## [0.1.3] — 2026-05-06
+
+### Fixed
+
+- `clip_to_arena` now logs the number of clamped frames and the maximum
+  out-of-bounds deviation at INFO. Previously silent — closes the
+  "no silent data repair" policy gap.
+
 ## [0.1.2] — 2026-05-06
 
 ### Fixed
