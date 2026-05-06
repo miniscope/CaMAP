@@ -475,7 +475,10 @@ def compute_stability_score(
 
     Optionally runs a shuffle significance test: circularly shifts
     events and computes the split-half correlation for each shuffle to
-    build a null distribution.
+    build a null distribution. Degenerate iterations (no overlapping
+    valid bins, or fewer than 3 jointly-finite bins) are skipped rather
+    than counted as 0; the p-value uses the count of valid shuffles in
+    its denominator (Phipson & Smyth 2010).
 
     Parameters
     ----------
@@ -657,8 +660,8 @@ def compute_stability_score(
         if min_shift_frames >= n_frames // 2:
             min_shift_frames = 0
 
-        shuffled_corrs = np.empty(n_shuffles)
-        for i in range(n_shuffles):
+        valid_corrs: list[float] = []
+        for _ in range(n_shuffles):
             shifted = np.roll(aligned_events, _draw_shift(rng, n_frames, min_shift_frames))
             rm1 = _shuffled_rate_map(
                 traj_x_first,
@@ -682,16 +685,19 @@ def compute_stability_score(
             )
 
             if not np.any(bv):
-                shuffled_corrs[i] = 0.0
                 continue
             v1, v2 = rm1[bv], rm2[bv]
             fm = np.isfinite(v1) & np.isfinite(v2)
             if np.sum(fm) < 3:
-                shuffled_corrs[i] = 0.0
                 continue
-            shuffled_corrs[i] = np.corrcoef(v1[fm], v2[fm])[0, 1]
+            valid_corrs.append(float(np.corrcoef(v1[fm], v2[fm])[0, 1]))
 
-        stability_p_val = float((np.sum(shuffled_corrs >= corr) + 1) / (n_shuffles + 1))
+        shuffled_corrs = np.array(valid_corrs)
+        n_valid = len(shuffled_corrs)
+        if n_valid == 0:
+            stability_p_val = np.nan
+        else:
+            stability_p_val = float((np.sum(shuffled_corrs >= corr) + 1) / (n_valid + 1))
     else:
         stability_p_val = np.nan
         shuffled_corrs = np.array([])
