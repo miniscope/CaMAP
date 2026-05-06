@@ -100,8 +100,12 @@ class ArenaDataset(BaseCaMAPDataset):
         """Apply geometric corrections to the behavior trajectory.
 
         When ``arena_bounds`` is configured:
-            jump removal → perspective correction → boundary clipping →
-            unit conversion (px → mm).
+            perspective correction → Hampel jump removal → boundary
+            clipping → unit conversion (px → mm).
+
+        Hampel runs after perspective so its threshold reflects the
+        post-correction trajectory; it stays before clipping so genuine
+        out-of-bounds outliers remain visible to the filter.
 
         When ``arena_bounds`` is **not** configured:
             warnings are logged and the trajectory remains in pixels.
@@ -142,21 +146,7 @@ class ArenaDataset(BaseCaMAPDataset):
             self._preprocess_steps: dict[str, pd.DataFrame] = {}
             self._preprocess_steps["Raw"] = self.trajectory[["x", "y"]].copy()
 
-            # 1. Hampel-filter outlier removal on the raw 2D trajectory.
-            self.trajectory, n_jumps = remove_position_jumps(
-                self.trajectory,
-                window_frames=bcfg.hampel_window_frames,
-                n_sigmas=bcfg.hampel_n_sigmas,
-            )
-            logger.info(
-                "Hampel jump removal: %d frames interpolated (window=%d, n_sigmas=%.1f)",
-                n_jumps,
-                bcfg.hampel_window_frames,
-                bcfg.hampel_n_sigmas,
-            )
-            self._preprocess_steps["Jump removal"] = self.trajectory[["x", "y"]].copy()
-
-            # 2. Perspective correction
+            # 1. Perspective correction
             self.trajectory = correct_perspective(
                 self.trajectory,
                 arena_bounds=dbcfg.arena_bounds,
@@ -171,6 +161,22 @@ class ArenaDataset(BaseCaMAPDataset):
                 dbcfg.tracking_height_mm,
             )
             self._preprocess_steps["Perspective"] = self.trajectory[["x", "y"]].copy()
+
+            # 2. Hampel jump removal — runs on perspective-corrected positions
+            # so the threshold reflects the post-correction trajectory; before
+            # clipping so genuine out-of-bounds outliers remain visible.
+            self.trajectory, n_jumps = remove_position_jumps(
+                self.trajectory,
+                window_frames=bcfg.hampel_window_frames,
+                n_sigmas=bcfg.hampel_n_sigmas,
+            )
+            logger.info(
+                "Hampel jump removal: %d frames interpolated (window=%d, n_sigmas=%.1f)",
+                n_jumps,
+                bcfg.hampel_window_frames,
+                bcfg.hampel_n_sigmas,
+            )
+            self._preprocess_steps["Jump removal"] = self.trajectory[["x", "y"]].copy()
 
             # 3. Boundary clipping
             self.trajectory = clip_to_arena(self.trajectory, arena_bounds=dbcfg.arena_bounds)
