@@ -110,8 +110,10 @@ Zone detection projects raw DLC `(x, y)` onto the maze graph **at the neural sam
 
 ### `ds.compute_occupancy()`
 
-- Compute 2D occupancy histogram from `trajectory_filtered`
-- Smooth with `spatial_sigma`, mask bins below `min_occupancy`
+- Compute the occupancy histogram from the speed-filtered trajectory:
+  - **Arena**: 2D histogram on a `bins × bins` grid spanning the arena extent.
+  - **Maze**: 1D histogram on the linearized `pos_1d` axis. Each arm segment (each direction, when `split_by_direction`) is binned **independently** into an integer number of equal bins whose width is as close as possible to `bin_width_mm`, so every arm boundary falls exactly on a bin edge and no bin straddles a junction. `segment_bins` records the cumulative bin count at each boundary; a warning is logged for any segment whose bins fall outside 0.5–1.5× the target width (e.g. a very short arm).
+- Smooth with `spatial_sigma` (within each segment for the maze, so smoothing never blurs across arm boundaries), mask bins below `min_occupancy`
 - Output: `occupancy_time`, `valid_mask`, bin edges
 
 ### `ds.analyze_units()` — per unit
