@@ -1648,7 +1648,7 @@ def plot_occupancy_preview_1d(
 
     # Right: occupancy bar chart
     centers = 0.5 * (edges[:-1] + edges[1:])
-    bar_width = edges[1] - edges[0]
+    bar_width = np.diff(edges)
     colors = ["steelblue" if v else "lightgray" for v in valid_mask]
     ax_occ.bar(centers, occupancy_time, width=bar_width, color=colors, edgecolor="none")
     ax_occ.set_xlabel("1D position")

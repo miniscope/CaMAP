@@ -391,12 +391,31 @@ class MazeDataset(BaseCaMAPDataset):
         scfg = self.spatial_1d
         n_segments = len(self.effective_arm_order)
 
-        total_length = self.pos_range[1] - self.pos_range[0]
-        n_bins = max(n_segments, round(total_length / scfg.bin_width_mm))
-
-        # Compute segment bin boundaries from arm boundaries
-        edges_tmp = np.linspace(self.pos_range[0], self.pos_range[1], n_bins + 1)
-        self.segment_bins = [int(np.searchsorted(edges_tmp, b)) for b in self.arm_boundaries]
+        # Bin each arm segment independently so every arm boundary falls
+        # exactly on a bin edge (no bin straddles a junction). Each segment
+        # is split into an integer number of equal bins whose width is as
+        # close as possible to bin_width_mm; segment_bins records the
+        # cumulative bin count at each boundary for per-segment smoothing.
+        w = scfg.bin_width_mm
+        edges = [self.arm_boundaries[0]]
+        self.segment_bins = [0]
+        for lo, hi in zip(self.arm_boundaries[:-1], self.arm_boundaries[1:]):
+            k = max(1, round((hi - lo) / w))
+            edges.extend((lo + (hi - lo) * np.arange(1, k + 1) / k).tolist())
+            self.segment_bins.append(self.segment_bins[-1] + k)
+            seg_width = (hi - lo) / k
+            if not 0.5 * w <= seg_width <= 1.5 * w:
+                logger.warning(
+                    "Segment [%.1f, %.1f] mm split into %d bins of %.1f mm "
+                    "(target %.1f mm); short or atypical arm length.",
+                    lo,
+                    hi,
+                    k,
+                    seg_width,
+                    w,
+                )
+        edges_arr = np.asarray(edges, dtype=float)
+        n_bins = len(edges_arr) - 1
 
         self.occupancy_time, self.valid_mask, self.edges_1d = compute_occupancy_map_1d(
             trajectory_df=self.trajectory_1d_filtered,
@@ -406,6 +425,7 @@ class MazeDataset(BaseCaMAPDataset):
             spatial_sigma=scfg.spatial_sigma,
             min_occupancy=scfg.min_occupancy,
             segment_bins=self.segment_bins,
+            edges=edges_arr,
         )
 
         self.x_edges = self.edges_1d

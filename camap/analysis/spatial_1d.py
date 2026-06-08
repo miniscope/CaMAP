@@ -95,6 +95,7 @@ def compute_occupancy_map_1d(
     min_occupancy: float = 0.1,
     pos_column: str = "pos_1d",
     segment_bins: list[int] | None = None,
+    edges: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute 1D occupancy histogram (raw).
 
@@ -103,9 +104,11 @@ def compute_occupancy_map_1d(
     trajectory_df:
         Speed-filtered trajectory with pos_column.
     n_bins:
-        Total number of spatial bins across all arms.
+        Total number of spatial bins across all arms. Ignored when
+        ``edges`` is given.
     pos_range:
-        (min, max) of the 1D position axis.
+        (min, max) of the 1D position axis. Ignored when ``edges`` is
+        given.
     behavior_fps:
         Behavior sampling rate.
     spatial_sigma:
@@ -120,6 +123,11 @@ def compute_occupancy_map_1d(
         Column name for position values.
     segment_bins:
         Bin boundary indices for per-segment smoothing.
+    edges:
+        Explicit bin edges. When provided, these are used as-is (e.g.
+        per-arm edges where boundaries land exactly on edges and bin
+        widths may differ slightly between arms); otherwise a uniform
+        grid is built from ``n_bins`` and ``pos_range``.
 
     Returns
     -------
@@ -127,7 +135,8 @@ def compute_occupancy_map_1d(
         (occupancy_time, valid_mask, edges) — ``occupancy_time`` is raw
         (seconds per bin); ``valid_mask`` comes from the smoothed copy.
     """
-    edges = np.linspace(pos_range[0], pos_range[1], n_bins + 1)
+    if edges is None:
+        edges = np.linspace(pos_range[0], pos_range[1], n_bins + 1)
     time_per_frame = 1.0 / behavior_fps
 
     counts, _ = np.histogram(trajectory_df[pos_column], bins=edges)

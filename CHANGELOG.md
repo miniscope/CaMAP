@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the major version is `0.x`, breaking API changes may land in any release;
 treat the package as alpha-stage until `1.0`.
 
+## [0.1.4] — 2026-06-08
+
+### Changed
+
+- Maze 1D occupancy now bins each arm independently into an integer
+  number of ~`bin_width_mm` bins, so every arm boundary falls exactly
+  on a bin edge. Previously a single global grid spanned the whole
+  linearized axis, letting a bin straddle an arm/direction junction and
+  pool frames from two segments. Maze rate maps, spatial information,
+  and place-cell classification can change slightly (mostly near
+  junctions); **re-run the maze pipeline to regenerate existing
+  bundles.** Arena pipelines are unaffected.
+
+### Added
+
+- `compute_occupancy_map_1d` accepts an optional `edges` argument for
+  explicit (possibly non-uniform) bin edges; the uniform `n_bins`/
+  `pos_range` path is unchanged.
+
 ## [0.1.3] — 2026-05-06
 
 ### Fixed
