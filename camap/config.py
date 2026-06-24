@@ -343,6 +343,14 @@ class NeuralDataConfig(BaseModel):
 
     path: str = Field(..., description="Directory containing neural zarr files.")
     timestamp: str = Field(..., description="Path to neural timestamp CSV.")
+    timestamp_first_col: str = Field(
+        "timestamp_first",
+        description="Neural timestamp CSV column for the canonical (start-of-exposure) sample time.",
+    )
+    timestamp_last_col: str = Field(
+        "timestamp_last",
+        description="Neural timestamp CSV column for the end-of-exposure sample time.",
+    )
 
 
 class BaseBehaviorDataConfig(BaseModel):
@@ -351,6 +359,14 @@ class BaseBehaviorDataConfig(BaseModel):
     fps: float = Field(..., gt=0.0, description="Behavior camera fps.")
     position: str = Field(..., description="Path to behavior position CSV.")
     timestamp: str = Field(..., description="Path to behavior timestamp CSV.")
+    timestamp_frame_col: str = Field(
+        "frame_index",
+        description="Behavior timestamp CSV column for the frame index (merge key with the position CSV).",
+    )
+    timestamp_time_col: str = Field(
+        "unix_time",
+        description="Behavior timestamp CSV column for the unix time of each behavior frame.",
+    )
     video: str | None = Field(None, description="Path to behavior video file.")
     bodypart: str | None = Field(None, description="DLC bodypart name (e.g. 'LED').")
     overlay_frame_index: int = Field(

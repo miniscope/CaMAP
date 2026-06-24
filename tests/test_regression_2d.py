@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 
 from camap.dataset.arena import ArenaDataset
 from camap.dataset.base import BaseCaMAPDataset
@@ -22,12 +23,56 @@ from camap.dataset.base import BaseCaMAPDataset
 REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_2d"
 
 
-@pytest.fixture(scope="module")
-def pipeline_result() -> ArenaDataset:
-    """Run the full pipeline once for all tests in this module."""
+def _renamed_columns_data_paths(src_dir: Path, dst_dir: Path) -> Path:
+    """Build a data_paths.yaml whose timestamp CSVs use non-default columns.
+
+    Copies the neural and behavior timestamp CSVs into *dst_dir* with their
+    canonical headers (``timestamp_first``, ``frame_index``, ``unix_time``)
+    renamed, then writes a data config that points at those copies and sets
+    the ``timestamp_*_col`` fields. All other inputs (zarr, position CSV) are
+    referenced in place via absolute paths. Returns the new data_paths.yaml.
+    """
+    neural_ts = pd.read_csv(src_dir / "neural_timestamp.csv").rename(
+        columns={"timestamp_first": "ts_first"}
+    )
+    neural_ts.to_csv(dst_dir / "neural_timestamp.csv", index=False)
+    beh_ts = pd.read_csv(src_dir / "behavior_timestamp.csv").rename(
+        columns={"frame_index": "f_idx", "unix_time": "t_unix"}
+    )
+    beh_ts.to_csv(dst_dir / "behavior_timestamp.csv", index=False)
+
+    cfg = yaml.safe_load((src_dir / "data_paths.yaml").read_text())
+    cfg["neural"]["path"] = str(src_dir / "neural_data")
+    cfg["neural"]["timestamp"] = str(dst_dir / "neural_timestamp.csv")
+    cfg["neural"]["timestamp_col"] = "ts_first"
+    cfg["behavior"]["position"] = str(src_dir / "behavior_position.csv")
+    cfg["behavior"]["timestamp"] = str(dst_dir / "behavior_timestamp.csv")
+    cfg["behavior"]["timestamp_frame_col"] = "f_idx"
+    cfg["behavior"]["timestamp_time_col"] = "t_unix"
+
+    out = dst_dir / "data_paths.yaml"
+    out.write_text(yaml.safe_dump(cfg))
+    return out
+
+
+@pytest.fixture(scope="module", params=["canonical", "renamed_columns"])
+def pipeline_result(request: pytest.FixtureRequest, tmp_path_factory) -> ArenaDataset:
+    """Run the full pipeline once per data-config variant.
+
+    ``canonical`` uses the default timestamp column names; ``renamed_columns``
+    points the loader at CSVs with non-default headers via the
+    ``timestamp_*_col`` config fields, exercising both neural and behavior
+    timestamp customization end to end. Both must produce identical results.
+    """
+    if request.param == "canonical":
+        data_paths = REGRESSION_DIR / "data_paths.yaml"
+    else:
+        tmp = tmp_path_factory.mktemp("renamed_columns")
+        data_paths = _renamed_columns_data_paths(REGRESSION_DIR, tmp)
+
     ds = BaseCaMAPDataset.from_yaml(
         REGRESSION_DIR / "analysis_config.yaml",
-        REGRESSION_DIR / "data_paths.yaml",
+        data_paths,
     )
     ds.load()
     ds.preprocess_behavior()
