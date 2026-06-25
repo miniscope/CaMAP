@@ -22,11 +22,30 @@ from camap.dataset.base import BaseCaMAPDataset
 REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_2d"
 
 
+# One reference bundle per deconvolution engine. The oasis reference is the
+# original author's bundle (reproduced bitwise via tau->g); the fista reference
+# is generated from the matching analysis_config_fista.yaml.
+ENGINE_CONFIGS = {
+    "oasis": "analysis_config.yaml",
+    "fista": "analysis_config_fista.yaml",
+}
+ENGINE_REFERENCES = {
+    "oasis": "reference.camap",
+    "fista": "reference_fista.camap",
+}
+
+
+@pytest.fixture(scope="module", params=list(ENGINE_CONFIGS))
+def engine(request: pytest.FixtureRequest) -> str:
+    """Deconvolution engine under test (oasis and fista)."""
+    return request.param
+
+
 @pytest.fixture(scope="module")
-def pipeline_result() -> ArenaDataset:
-    """Run the full pipeline once for all tests in this module."""
+def pipeline_result(engine: str) -> ArenaDataset:
+    """Run the full pipeline once per engine for all tests in this module."""
     ds = BaseCaMAPDataset.from_yaml(
-        REGRESSION_DIR / "analysis_config.yaml",
+        REGRESSION_DIR / ENGINE_CONFIGS[engine],
         REGRESSION_DIR / "data_paths.yaml",
     )
     ds.load()
@@ -39,10 +58,9 @@ def pipeline_result() -> ArenaDataset:
 
 
 @pytest.fixture(scope="module")
-def reference() -> ArenaDataset:
-    """Load the reference bundle."""
-    return BaseCaMAPDataset.load_bundle(REGRESSION_DIR / "reference.camap")
-
+def reference(engine: str) -> ArenaDataset:
+    """Load the reference bundle for the engine under test."""
+    return BaseCaMAPDataset.load_bundle(REGRESSION_DIR / ENGINE_REFERENCES[engine])
 
 
 @pytest.mark.timeout(120)
@@ -52,7 +70,6 @@ def test_summary_counts(
 ) -> None:
     """Pipeline summary counts must match the reference."""
     assert pipeline_result.summary() == reference.summary()
-
 
 
 def test_good_unit_ids(
@@ -79,7 +96,6 @@ def test_event_index_shape(
     assert got == ref
 
 
-
 def test_event_place_shape(
     pipeline_result: ArenaDataset,
     reference: ArenaDataset,
@@ -89,7 +105,6 @@ def test_event_place_shape(
     got = (pipeline_result.event_place["s"] > threshold).sum()
     ref = (reference.event_place["s"] > threshold).sum()
     assert got == ref
-
 
 
 def test_occupancy_map(
@@ -115,15 +130,12 @@ def test_valid_mask(
     )
 
 
-
 def test_unit_result_ids(
     pipeline_result: ArenaDataset,
     reference: ArenaDataset,
 ) -> None:
     """Analyzed unit IDs must match."""
-    assert sorted(pipeline_result.unit_results.keys()) == sorted(
-        reference.unit_results.keys()
-    )
+    assert sorted(pipeline_result.unit_results.keys()) == sorted(reference.unit_results.keys())
 
 
 def test_unit_scalars(
@@ -172,22 +184,17 @@ def test_rate_maps(
         )
 
 
-
 def test_save_load_bundle_roundtrip(
     pipeline_result: ArenaDataset,
 ) -> None:
     """save_bundle → load_bundle must round-trip without error and preserve results."""
     with tempfile.TemporaryDirectory() as tmp:
-        bundle_path = pipeline_result.save_bundle(
-            Path(tmp) / "test", save_figures=False
-        )
+        bundle_path = pipeline_result.save_bundle(Path(tmp) / "test", save_figures=False)
         reloaded = BaseCaMAPDataset.load_bundle(bundle_path)
 
     assert isinstance(reloaded, ArenaDataset)
     assert reloaded.summary() == pipeline_result.summary()
-    assert sorted(reloaded.unit_results.keys()) == sorted(
-        pipeline_result.unit_results.keys()
-    )
+    assert sorted(reloaded.unit_results.keys()) == sorted(pipeline_result.unit_results.keys())
     for uid in pipeline_result.unit_results:
         np.testing.assert_allclose(
             reloaded.unit_results[uid].rate_map_smoothed,

@@ -8,8 +8,8 @@ from camap.config import (
     AnalysisConfig,
     ArenaBehaviorDataConfig,
     DataConfig,
+    DeconvConfig,
     MazeBehaviorDataConfig,
-    OasisConfig,
 )
 
 
@@ -19,14 +19,14 @@ def test_config_loads(example_config_path: Path) -> None:
 
     assert cfg.neural is not None
     assert cfg.behavior is not None
-    assert cfg.neural.oasis is not None
+    assert cfg.neural.deconv is not None
     assert cfg.behavior.speed_threshold == 50.0
 
 
-def test_oasis_config_g_required() -> None:
-    """OasisConfig should require g parameter."""
+def test_deconv_config_taus_required() -> None:
+    """DeconvConfig should require tau_rise and tau_decay."""
     with pytest.raises(Exception):  # pydantic ValidationError
-        OasisConfig(id="test", baseline="p10")  # Missing g
+        DeconvConfig(baseline="p10")  # Missing tau_rise / tau_decay
 
 
 def _write_yaml(text: str) -> Path:

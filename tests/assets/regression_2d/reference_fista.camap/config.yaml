@@ -1,0 +1,37 @@
+neural:
+  fps: 20.0
+  deconv:
+    engine: fista
+    tau_rise: 0.06
+    tau_decay: 0.9
+    lam: 0.8
+    baseline: p10
+    s_min: 0.0
+    max_iters: 2000
+    tol: 1.0e-05
+  trace_name: C_lp
+behavior:
+  type: arena
+  speed_threshold: 25.0
+  speed_window_seconds: 0.25
+  hampel_window_frames: 7
+  hampel_n_sigmas: 3.0
+  spatial_map_2d:
+    min_occupancy: 0.025
+    spatial_sigma: 3.0
+    n_shuffles: 100
+    random_seed: 42
+    p_value_threshold: 0.05
+    min_shift_seconds: 20.0
+    si_weight_mode: amplitude
+    stability_splits:
+    - 2
+    - 10
+    min_events: 0
+    block_shift: 0.0
+    bins: 50
+    event_threshold_sigma: 0.0
+    place_field_threshold: 0.35
+    place_field_min_bins: 5
+    place_field_seed_percentile: 95.0
+  spatial_map_1d: null

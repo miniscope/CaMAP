@@ -6,14 +6,16 @@ from typing import Any
 import numpy as np
 import xarray as xr
 
+from camap.deconv import build_kernel, fista_deconvolve, tau_to_g
 from camap.log import init_logger
 
 logger = init_logger(__name__)
 
 _OASIS_INSTALL_HINT = (
-    "oasis-deconv is required for deconvolution but is not bundled with CaMAP.\n"
+    "The 'oasis' deconvolution engine requires the oasis-deconv package, which "
+    "is not bundled with CaMAP. Either set neural.deconv.engine to 'fista' "
+    "(no extra dependency) or install oasis-deconv with one of:\n"
     "\n"
-    "Install with one of:\n"
     "  # source build (recommended; needs a C compiler)\n"
     "  pip install --no-binary oasis-deconv oasis-deconv\n"
     "\n"
@@ -73,13 +75,23 @@ def load_calcium_traces(
 def run_deconvolution(
     C_da: Any,
     unit_ids: list[int],
-    g: tuple[float, float],
+    fps: float,
+    tau_rise: float,
+    tau_decay: float,
+    lam: float,
     baseline: float | str,
-    penalty: float,
     s_min: float,
+    engine: str = "fista",
+    max_iters: int = 2000,
+    tol: float = 1e-5,
     progress_bar: Any = None,
-) -> tuple[list[int], list[np.ndarray], list[np.ndarray]]:
-    """Run OASIS deconvolution on calcium traces.
+) -> tuple[list[int], list[np.ndarray]]:
+    """Deconvolve calcium traces with the selected engine (see :mod:`camap.deconv`).
+
+    Both engines are driven by the indicator rise/decay time constants:
+    ``"fista"`` builds a double-exponential kernel and solves a non-negative L1
+    problem (no extra dependency); ``"oasis"`` converts the time constants to
+    AR(2) coefficients and runs ``oasisAR2`` (requires ``oasis-deconv``).
 
     Parameters
     ----------
@@ -87,14 +99,23 @@ def run_deconvolution(
         Calcium traces with dimensions (unit_id, frame).
     unit_ids : list[int]
         List of unit IDs to process.
-    g : tuple[float, float]
-        AR(2) coefficients for OASIS.
+    fps : float
+        Sampling rate (frames per second), used to build the kernel / AR(2) poles.
+    tau_rise, tau_decay : float
+        Indicator rise/decay time constants in seconds.
+    lam : float
+        Sparsity weight (L1). 0 disables the penalty.
     baseline : float or str
-        Baseline correction. Use 'pXX' for percentile (e.g., 'p10') or numeric value.
-    penalty : float
-        Sparsity penalty for OASIS.
+        Baseline correction applied before deconvolution. Use 'pXX' for a
+        percentile (e.g. 'p10') or a numeric value (0 = none).
     s_min : float
-        Minimum event size threshold.
+        Minimum event size; recovered events below this are zeroed.
+    engine : str
+        ``"fista"`` (default) or ``"oasis"``.
+    max_iters : int
+        Maximum FISTA iterations per unit (FISTA engine only).
+    tol : float
+        Relative convergence tolerance (FISTA engine only).
     progress_bar : optional
         tqdm progress bar wrapper (e.g., tqdm.notebook.tqdm).
 
@@ -105,16 +126,31 @@ def run_deconvolution(
     S_list : list[np.ndarray]
         Spike trains.
     """
-    import warnings
+    if engine == "fista":
+        kernel = build_kernel(tau_rise, tau_decay, fps)
 
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        try:
-            from oasis.oasis_methods import oasisAR2
-        except ImportError as exc:
-            raise ImportError(_OASIS_INSTALL_HINT) from exc
-    for w in caught:
-        logger.warning(str(w.message))
+        def deconv_one(y_corrected: np.ndarray) -> np.ndarray:
+            s, _c, _b = fista_deconvolve(y_corrected, kernel, lam=lam, max_iters=max_iters, tol=tol)
+            return s
+    elif engine == "oasis":
+        import warnings
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            try:
+                from oasis.oasis_methods import oasisAR2
+            except ImportError as exc:
+                raise ImportError(_OASIS_INSTALL_HINT) from exc
+        for w in caught:
+            logger.warning(str(w.message))
+
+        g1, g2 = tau_to_g(tau_rise, tau_decay, fps)
+
+        def deconv_one(y_corrected: np.ndarray) -> np.ndarray:
+            _c, s = oasisAR2(y_corrected, g1=g1, g2=g2, lam=lam, s_min=s_min)
+            return np.asarray(s, dtype=float)
+    else:
+        raise ValueError(f"Unknown deconvolution engine {engine!r}; use 'fista' or 'oasis'.")
 
     good_unit_ids: list[int] = []
     S_list: list[np.ndarray] = []
@@ -134,7 +170,10 @@ def run_deconvolution(
         y_corrected = y - b
 
         try:
-            c, s = oasisAR2(y_corrected, g1=g[0], g2=g[1], lam=penalty, s_min=s_min)
+            s = deconv_one(y_corrected)
+            # OASIS applies s_min internally; apply the floor for FISTA too.
+            if engine == "fista" and s_min > 0:
+                s = np.where(s < s_min, 0.0, s)
             good_unit_ids.append(int(uid))
             S_list.append(np.asarray(s, dtype=float))
         except Exception:

@@ -1,0 +1,27 @@
+neural:
+  fps: 20.0
+  deconv:
+    engine: fista
+    tau_rise: 0.06
+    tau_decay: 0.9
+    baseline: p10
+    lam: 0.8
+    s_min: 0.0
+  trace_name: C_lp
+behavior:
+  type: maze
+  speed_threshold: 25.0
+  speed_window_seconds: 0.25
+  spatial_map_2d: null
+  spatial_map_1d:
+    bin_width_mm: 10.0
+    min_occupancy: 0.1
+    spatial_sigma: 3.0
+    n_shuffles: 100
+    random_seed: 42
+    p_value_threshold: 0.05
+    min_shift_seconds: 20.0
+    si_weight_mode: amplitude
+    stability_splits: [2, 10]
+    block_shift: 0.0
+    split_by_direction: true

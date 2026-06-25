@@ -1,7 +1,8 @@
 neural:
   fps: 20.0
-  oasis:
-    g: [1.6, -0.63]
+  deconv:
+    tau_rise: 0.14
+    tau_decay: 0.47
     baseline: p10
   trace_name: C
 behavior:

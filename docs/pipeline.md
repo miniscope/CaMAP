@@ -288,10 +288,12 @@ behavior:
 ```yaml
 neural:
   fps: 20.0
-  oasis:
-    g: [1.60, -0.63]  # AR(2) coefficients (required, usually overridden by data config)
+  deconv:
+    engine: fista  # 'fista' (no extra deps) or 'oasis' (needs oasis-deconv)
+    tau_rise: 0.14  # Indicator rise time constant in seconds (required).
+    tau_decay: 0.47  # Indicator decay time constant in seconds (required).
     baseline: p10
-    penalty: 0.8  # Sparsity penalty (higher = fewer events). Default 0.
+    lam: 0.8  # Sparsity weight (higher = fewer events). Default 0.
     s_min: 0  # Minimum event size threshold. Default 0.
   trace_name: C_lp
 
@@ -324,10 +326,11 @@ behavior:
 ```yaml
 neural:
   fps: 20.0
-  oasis:
-    g: [1.60, -0.63]
+  deconv:
+    tau_rise: 0.14  # seconds
+    tau_decay: 0.47  # seconds
     baseline: p10
-    penalty: 0.8
+    lam: 0.8
   trace_name: C_lp
 
 behavior:

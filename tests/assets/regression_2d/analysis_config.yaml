@@ -1,11 +1,11 @@
 neural:
   fps: 20.0
-  oasis:
-    g:
-    - 1.3805576774138437
-    - -0.4111122905071874
+  deconv:
+    engine: oasis
+    tau_rise: 0.06
+    tau_decay: 0.9
     baseline: p10
-    penalty: 0.8
+    lam: 0.8
     s_min: 0
   trace_name: C_lp
 behavior:

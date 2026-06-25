@@ -1,9 +1,11 @@
 neural:
   fps: 20.0
-  oasis:
-    g: [1.60, -0.63]
+  deconv:
+    engine: fista  # 'fista' (no extra deps) or 'oasis' (needs oasis-deconv)
+    tau_rise: 0.14  # seconds
+    tau_decay: 0.47  # seconds
     baseline: p10
-    penalty: 0.8
+    lam: 0.8
     s_min: 0
   trace_name: C_lp
 

@@ -514,7 +514,7 @@ class BaseCaMAPDataset(abc.ABC):
         self,
         progress_bar: Any = None,
     ) -> None:
-        """Run OASIS deconvolution on calcium traces.
+        """Run deconvolution on calcium traces (engine set in config).
 
         No-op for behavior-only sessions (no neural data configured).
 
@@ -529,18 +529,29 @@ class BaseCaMAPDataset(abc.ABC):
         if self.traces is None:
             raise RuntimeError("Call load() first.")
 
-        oasis = self.cfg.neural.oasis
+        deconv = self.cfg.neural.deconv
 
         all_unit_ids = list(map(int, self.traces["unit_id"].values))
-        logger.info("Deconvolving %d units (g=%s)...", len(all_unit_ids), oasis.g)
+        logger.info(
+            "Deconvolving %d units (engine=%s, tau_rise=%.3fs, tau_decay=%.3fs)...",
+            len(all_unit_ids),
+            deconv.engine,
+            deconv.tau_rise,
+            deconv.tau_decay,
+        )
 
         self.good_unit_ids, self.S_list = run_deconvolution(
             C_da=self.traces,
             unit_ids=all_unit_ids,
-            g=oasis.g,
-            baseline=oasis.baseline,
-            penalty=oasis.penalty,
-            s_min=oasis.s_min,
+            fps=self.cfg.neural.fps,
+            tau_rise=deconv.tau_rise,
+            tau_decay=deconv.tau_decay,
+            lam=deconv.lam,
+            baseline=deconv.baseline,
+            s_min=deconv.s_min,
+            engine=deconv.engine,
+            max_iters=deconv.max_iters,
+            tol=deconv.tol,
             progress_bar=progress_bar,
         )
         logger.info("Deconvolved %d units", len(self.good_unit_ids))

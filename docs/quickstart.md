@@ -88,10 +88,11 @@ Create `config.yaml` with analysis parameters:
 neural:
   fps: 20.0
   trace_name: C
-  oasis:
-    g: [1.60, -0.63]
+  deconv:
+    tau_rise: 0.14  # seconds
+    tau_decay: 0.47  # seconds
     baseline: p10
-    penalty: 0
+    lam: 0
 behavior:
   type: arena
   speed_threshold: 10.0
@@ -110,10 +111,11 @@ behavior:
 neural:
   fps: 20.0
   trace_name: C_lp
-  oasis:
-    g: [1.60, -0.63]
+  deconv:
+    tau_rise: 0.14  # seconds
+    tau_decay: 0.47  # seconds
     baseline: p10
-    penalty: 0.8
+    lam: 0.8
 behavior:
   type: maze
   speed_threshold: 25

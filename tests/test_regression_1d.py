@@ -21,11 +21,30 @@ from camap.dataset.maze import MazeDataset
 REGRESSION_DIR = Path(__file__).parent / "assets" / "regression_1d"
 
 
+# One reference bundle per deconvolution engine. The oasis reference is the
+# original author's bundle (reproduced bitwise via tau->g); the fista reference
+# is generated from the matching analysis_config_fista.yaml.
+ENGINE_CONFIGS = {
+    "oasis": "analysis_config.yaml",
+    "fista": "analysis_config_fista.yaml",
+}
+ENGINE_REFERENCES = {
+    "oasis": "reference.camap",
+    "fista": "reference_fista.camap",
+}
+
+
+@pytest.fixture(scope="module", params=list(ENGINE_CONFIGS))
+def engine(request: pytest.FixtureRequest) -> str:
+    """Deconvolution engine under test (oasis and fista)."""
+    return request.param
+
+
 @pytest.fixture(scope="module")
-def pipeline_result() -> MazeDataset:
-    """Run the full 1D maze pipeline once for all tests in this module."""
+def pipeline_result(engine: str) -> MazeDataset:
+    """Run the full 1D maze pipeline once per engine for all tests in this module."""
     ds = BaseCaMAPDataset.from_yaml(
-        REGRESSION_DIR / "analysis_config.yaml",
+        REGRESSION_DIR / ENGINE_CONFIGS[engine],
         REGRESSION_DIR / "data_paths.yaml",
     )
     assert isinstance(ds, MazeDataset)
@@ -39,9 +58,9 @@ def pipeline_result() -> MazeDataset:
 
 
 @pytest.fixture(scope="module")
-def reference() -> MazeDataset:
-    """Load the reference bundle."""
-    ds = BaseCaMAPDataset.load_bundle(REGRESSION_DIR / "reference.camap")
+def reference(engine: str) -> MazeDataset:
+    """Load the reference bundle for the engine under test."""
+    ds = BaseCaMAPDataset.load_bundle(REGRESSION_DIR / ENGINE_REFERENCES[engine])
     assert isinstance(ds, MazeDataset)
     return ds
 
@@ -111,9 +130,7 @@ def test_trajectory_1d_filtered_shape(
     reference: MazeDataset,
 ) -> None:
     """Speed-filtered 1D trajectory frame count must match."""
-    assert len(pipeline_result.trajectory_1d_filtered) == len(
-        reference.trajectory_1d_filtered
-    )
+    assert len(pipeline_result.trajectory_1d_filtered) == len(reference.trajectory_1d_filtered)
 
 
 def test_arm_boundaries(
@@ -188,9 +205,7 @@ def test_unit_result_ids(
     reference: MazeDataset,
 ) -> None:
     """Analyzed unit IDs must match."""
-    assert sorted(pipeline_result.unit_results.keys()) == sorted(
-        reference.unit_results.keys()
-    )
+    assert sorted(pipeline_result.unit_results.keys()) == sorted(reference.unit_results.keys())
 
 
 def test_unit_scalars(
@@ -244,16 +259,12 @@ def test_save_load_bundle_roundtrip(
 ) -> None:
     """save_bundle → load_bundle must round-trip without error and preserve results."""
     with tempfile.TemporaryDirectory() as tmp:
-        bundle_path = pipeline_result.save_bundle(
-            Path(tmp) / "test", save_figures=False
-        )
+        bundle_path = pipeline_result.save_bundle(Path(tmp) / "test", save_figures=False)
         reloaded = BaseCaMAPDataset.load_bundle(bundle_path)
 
     assert isinstance(reloaded, MazeDataset)
     assert reloaded.summary() == pipeline_result.summary()
-    assert sorted(reloaded.unit_results.keys()) == sorted(
-        pipeline_result.unit_results.keys()
-    )
+    assert sorted(reloaded.unit_results.keys()) == sorted(pipeline_result.unit_results.keys())
     for uid in pipeline_result.unit_results:
         np.testing.assert_allclose(
             reloaded.unit_results[uid].rate_map_smoothed,

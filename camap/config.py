@@ -13,30 +13,55 @@ logger = init_logger(__name__)
 CONFIG_DIR = Path(__file__).parent / "config"
 
 
-class OasisConfig(BaseModel):
-    """OASIS AR(2) deconvolution parameters.
+class DeconvConfig(BaseModel):
+    """Deconvolution parameters (see :mod:`camap.deconv`).
 
-    ``g``, ``penalty``, ``s_min`` are passed directly to oasisAR2.
-    ``baseline`` is applied before deconvolution.
+    Both engines are driven by the indicator rise/decay time constants. The
+    ``"fista"`` engine builds a double-exponential kernel from
+    ``tau_rise``/``tau_decay`` (plus the neural ``fps``) and solves a
+    non-negative L1 problem; the ``"oasis"`` engine converts the same time
+    constants to AR(2) coefficients and runs ``oasisAR2``. ``lam`` is the
+    sparsity weight for either engine, ``baseline`` is applied before
+    deconvolution, and ``s_min`` thresholds the recovered events.
     """
 
-    g: tuple[float, float] = Field(
+    engine: Literal["fista", "oasis"] = Field(
+        "fista",
+        description="Deconvolution engine: 'fista' (no extra deps) or 'oasis'.",
+    )
+    tau_rise: float = Field(
         ...,
-        description="AR(2) coefficients (g1, g2).",
+        gt=0.0,
+        description="Indicator rise time constant (seconds).",
+    )
+    tau_decay: float = Field(
+        ...,
+        gt=0.0,
+        description="Indicator decay time constant (seconds).",
+    )
+    lam: float = Field(
+        0.0,
+        ge=0.0,
+        description="Sparsity weight (L1). Higher = fewer events. Default 0.",
     )
     baseline: str | float = Field(
         "p10",
         description="'pXX' for percentile, or numeric value (0 = no baseline).",
     )
-    penalty: float = Field(
-        0.0,
-        ge=0.0,
-        description="Sparsity penalty (L0 norm).",
-    )
     s_min: float = Field(
         0.0,
         ge=0.0,
         description="Minimum event size threshold.",
+    )
+    max_iters: int = Field(
+        2000,
+        gt=0,
+        description="Maximum FISTA iterations per unit.",
+    )
+    tol: float = Field(
+        1e-5,
+        gt=0.0,
+        description="Relative convergence tolerance.",
     )
 
 
@@ -44,7 +69,7 @@ class NeuralConfig(BaseModel):
     """Neural data paths and deconvolution settings."""
 
     fps: float = Field(..., description="Sampling rate (fps).")
-    oasis: OasisConfig = Field(...)
+    deconv: DeconvConfig = Field(...)
     trace_name: str = Field("C", description="Zarr group name (e.g. 'C' or 'C_lp').")
 
 
