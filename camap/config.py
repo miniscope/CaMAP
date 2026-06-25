@@ -343,13 +343,9 @@ class NeuralDataConfig(BaseModel):
 
     path: str = Field(..., description="Directory containing neural zarr files.")
     timestamp: str = Field(..., description="Path to neural timestamp CSV.")
-    timestamp_first_col: str = Field(
+    timestamp_col: str = Field(
         "timestamp_first",
-        description="Neural timestamp CSV column for the canonical (start-of-exposure) sample time.",
-    )
-    timestamp_last_col: str = Field(
-        "timestamp_last",
-        description="Neural timestamp CSV column for the end-of-exposure sample time.",
+        description="Neural timestamp CSV column to use as the neural sample time.",
     )
 
 

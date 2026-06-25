@@ -404,13 +404,13 @@ class BaseCaMAPDataset(abc.ABC):
 
         ts_df = pd.read_csv(self.neural_timestamp_path)
         ncfg = self.data_cfg.neural if self.data_cfg else None
-        first_col = ncfg.timestamp_first_col if ncfg else "timestamp_first"
-        if first_col not in ts_df.columns:
+        time_col = ncfg.timestamp_col if ncfg else "timestamp_first"
+        if time_col not in ts_df.columns:
             raise ValueError(
-                f"neural_timestamp CSV must contain a '{first_col}' column. "
+                f"neural_timestamp CSV must contain a '{time_col}' column. "
                 f"Got: {list(ts_df.columns)}"
             )
-        neural_time = ts_df[first_col].to_numpy()
+        neural_time = ts_df[time_col].to_numpy()
 
         # Run the same validation that match_events will run later;
         # log results now so the user sees quality before deconvolution.

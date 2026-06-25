@@ -312,7 +312,7 @@ def detect_zones_cmd(
         bodypart=bcfg.bodypart,
         behavior_frame_col=bcfg.timestamp_frame_col,
         behavior_time_col=bcfg.timestamp_time_col,
-        neural_first_col=data_cfg.neural.timestamp_first_col,
+        neural_time_col=data_cfg.neural.timestamp_col,
         arm_max_distance=zd.arm_max_distance,
         min_confidence=zd.min_confidence,
         min_confidence_forbidden=zd.min_confidence_forbidden,

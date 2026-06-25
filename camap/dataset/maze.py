@@ -105,8 +105,8 @@ class MazeDataset(BaseCaMAPDataset):
             bodypart=bcfg.bodypart,
             behavior_frame_col=bcfg.timestamp_frame_col,
             behavior_time_col=bcfg.timestamp_time_col,
-            neural_first_col=(
-                self.data_cfg.neural.timestamp_first_col
+            neural_time_col=(
+                self.data_cfg.neural.timestamp_col
                 if self.data_cfg.neural
                 else "timestamp_first"
             ),

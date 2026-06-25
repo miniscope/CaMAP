@@ -415,7 +415,7 @@ def detect_zones_from_csv(
     bodypart: str | None = None,
     behavior_frame_col: str = "frame_index",
     behavior_time_col: str = "unix_time",
-    neural_first_col: str = "timestamp_first",
+    neural_time_col: str = "timestamp_first",
     arm_max_distance: float = 60.0,
     min_confidence: float = 0.5,
     min_confidence_forbidden: float = 0.8,
@@ -453,12 +453,12 @@ def detect_zones_from_csv(
         CSV with frame-index and unix-time columns for the behavior CSV
         (column names given by ``behavior_frame_col`` / ``behavior_time_col``).
     neural_timestamp_csv:
-        CSV with a neural sample-time column (named by ``neural_first_col``).
+        CSV with a neural sample-time column (named by ``neural_time_col``).
     bodypart:
         Body part name to use. If ``None``, uses the first bodypart found.
     behavior_frame_col, behavior_time_col:
         Frame-index and unix-time column names in ``behavior_timestamp_csv``.
-    neural_first_col:
+    neural_time_col:
         Sample-time column name in ``neural_timestamp_csv``.
     arm_max_distance:
         Maximum distance from arm centerline for arm classification.
@@ -535,14 +535,12 @@ def detect_zones_from_csv(
     ).merge(behavior_ts[["frame_index", "unix_time"]], on="frame_index", how="left")
 
     neural_ts = pd.read_csv(neural_timestamp_csv)
-    if neural_first_col not in neural_ts.columns:
+    if neural_time_col not in neural_ts.columns:
         raise ValueError(
-            f"neural_timestamp_csv must have a '{neural_first_col}' column. "
+            f"neural_timestamp_csv must have a '{neural_time_col}' column. "
             f"Got: {list(neural_ts.columns)}"
         )
-    # neural_first_col is the canonical neural sample time; the
-    # end-of-exposure stamp is occasionally noisy, so we ignore it here.
-    neural_time = neural_ts[neural_first_col].to_numpy()
+    neural_time = neural_ts[neural_time_col].to_numpy()
 
     interpolated = interpolate_behavior_onto_neural(
         behavior_at_beh,
