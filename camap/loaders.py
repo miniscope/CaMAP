@@ -18,17 +18,25 @@ def compute_overlap_time_range(
     neural_timestamp: Path,
     behavior_timestamp: Path,
     use_neural_last_timestamp: bool = True,
+    *,
+    neural_first_col: str = "timestamp_first",
+    neural_last_col: str = "timestamp_last",
+    behavior_time_col: str = "unix_time",
 ) -> tuple[float, float]:
     """Compute the overlapping time range between neural and behavior recordings.
 
     Parameters
     ----------
     neural_timestamp:
-        Path to neural timestamp CSV (columns: frame, timestamp_first, timestamp_last).
+        Path to neural timestamp CSV.
     behavior_timestamp:
-        Path to behavior timestamp CSV (columns: frame_index, unix_time).
+        Path to behavior timestamp CSV.
     use_neural_last_timestamp:
-        Whether to use timestamp_last for neural frames.
+        Whether to use ``neural_last_col`` for neural frames.
+    neural_first_col, neural_last_col:
+        Neural timestamp CSV column names for the start- and end-of-exposure times.
+    behavior_time_col:
+        Behavior timestamp CSV column name for the unix time of each frame.
 
     Returns
     -------
@@ -38,12 +46,12 @@ def compute_overlap_time_range(
     neural_ts = pd.read_csv(neural_timestamp)
     beh_ts = pd.read_csv(behavior_timestamp)
 
-    ts_col = "timestamp_last" if use_neural_last_timestamp else "timestamp_first"
+    ts_col = neural_last_col if use_neural_last_timestamp else neural_first_col
     neural_start = neural_ts[ts_col].min()
     neural_end = neural_ts[ts_col].max()
 
-    beh_start = beh_ts["unix_time"].min()
-    beh_end = beh_ts["unix_time"].max()
+    beh_start = beh_ts[behavior_time_col].min()
+    beh_end = beh_ts[behavior_time_col].max()
 
     overlap_start = max(neural_start, beh_start)
     overlap_end = min(neural_end, beh_end)
@@ -72,6 +80,8 @@ def load_behavior_data(
     *,
     x_col: str = "x",
     y_col: str = "y",
+    frame_col: str = "frame_index",
+    time_col: str = "unix_time",
 ) -> pd.DataFrame:
     """Load the raw behavior trajectory at behavior rate.
 
@@ -89,6 +99,9 @@ def load_behavior_data(
         Body part name to use for trajectory.
     x_col, y_col:
         Coordinate column names in the behavior CSV.
+    frame_col, time_col:
+        Frame-index and unix-time column names in the behavior timestamp CSV.
+        Renamed internally to ``frame_index`` / ``unix_time``.
     """
     if not behavior_position.exists():
         raise FileNotFoundError(
@@ -105,6 +118,15 @@ def load_behavior_data(
         behavior_position, bodypart=bodypart, x_col=x_col, y_col=y_col
     )
     behavior_timestamps = pd.read_csv(behavior_timestamp)
+    missing = {frame_col, time_col} - set(behavior_timestamps.columns)
+    if missing:
+        raise ValueError(
+            f"Behavior timestamp CSV {behavior_timestamp} is missing column(s) "
+            f"{sorted(missing)}. Got: {list(behavior_timestamps.columns)}"
+        )
+    behavior_timestamps = behavior_timestamps.rename(
+        columns={frame_col: "frame_index", time_col: "unix_time"}
+    )
     return (
         full_trajectory.merge(
             behavior_timestamps[["frame_index", "unix_time"]], on="frame_index", how="inner"

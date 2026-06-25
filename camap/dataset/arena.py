@@ -70,6 +70,8 @@ class ArenaDataset(BaseCaMAPDataset):
             bodypart=bcfg.bodypart,
             x_col=bcfg.x_col,
             y_col=bcfg.y_col,
+            frame_col=bcfg.timestamp_frame_col,
+            time_col=bcfg.timestamp_time_col,
         )
         logger.info("Loaded trajectory: %d frames", len(self.trajectory))
 

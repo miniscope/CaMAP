@@ -413,6 +413,9 @@ def detect_zones_from_csv(
     behavior_timestamp_csv: str | Path,
     neural_timestamp_csv: str | Path,
     bodypart: str | None = None,
+    behavior_frame_col: str = "frame_index",
+    behavior_time_col: str = "unix_time",
+    neural_time_col: str = "timestamp_first",
     arm_max_distance: float = 60.0,
     min_confidence: float = 0.5,
     min_confidence_forbidden: float = 0.8,
@@ -447,12 +450,16 @@ def detect_zones_from_csv(
     zone_config_path:
         Path to combined zone config YAML.
     behavior_timestamp_csv:
-        CSV with ``frame_index, unix_time`` columns for the behavior CSV.
+        CSV with frame-index and unix-time columns for the behavior CSV
+        (column names given by ``behavior_frame_col`` / ``behavior_time_col``).
     neural_timestamp_csv:
-        CSV with ``frame, timestamp_first, timestamp_last`` columns; the
-        midpoint of those two timestamps is used as the neural sample time.
+        CSV with a neural sample-time column (named by ``neural_time_col``).
     bodypart:
         Body part name to use. If ``None``, uses the first bodypart found.
+    behavior_frame_col, behavior_time_col:
+        Frame-index and unix-time column names in ``behavior_timestamp_csv``.
+    neural_time_col:
+        Sample-time column name in ``neural_timestamp_csv``.
     arm_max_distance:
         Maximum distance from arm centerline for arm classification.
     min_confidence:
@@ -511,11 +518,17 @@ def detect_zones_from_csv(
     )
 
     behavior_ts = pd.read_csv(behavior_timestamp_csv)
-    if "frame_index" not in behavior_ts.columns or "unix_time" not in behavior_ts.columns:
+    if (
+        behavior_frame_col not in behavior_ts.columns
+        or behavior_time_col not in behavior_ts.columns
+    ):
         raise ValueError(
-            f"behavior_timestamp_csv must have 'frame_index' and 'unix_time' columns. "
-            f"Got: {list(behavior_ts.columns)}"
+            f"behavior_timestamp_csv must have '{behavior_frame_col}' and "
+            f"'{behavior_time_col}' columns. Got: {list(behavior_ts.columns)}"
         )
+    behavior_ts = behavior_ts.rename(
+        columns={behavior_frame_col: "frame_index", behavior_time_col: "unix_time"}
+    )
     behavior_at_beh = pd.DataFrame(
         {
             "frame_index": behavior_frame_index,
@@ -525,15 +538,12 @@ def detect_zones_from_csv(
     ).merge(behavior_ts[["frame_index", "unix_time"]], on="frame_index", how="left")
 
     neural_ts = pd.read_csv(neural_timestamp_csv)
-    if not {"frame", "timestamp_first"}.issubset(neural_ts.columns):
+    if neural_time_col not in neural_ts.columns:
         raise ValueError(
-            f"neural_timestamp_csv must have 'frame' and 'timestamp_first' "
-            f"columns. Got: {list(neural_ts.columns)}"
+            f"neural_timestamp_csv must have a '{neural_time_col}' column. "
+            f"Got: {list(neural_ts.columns)}"
         )
-    # timestamp_first is the canonical neural sample time; timestamp_last
-    # is the end-of-exposure stamp and is occasionally noisy, so we ignore
-    # it here.
-    neural_time = neural_ts["timestamp_first"].to_numpy()
+    neural_time = neural_ts[neural_time_col].to_numpy()
 
     interpolated = interpolate_behavior_onto_neural(
         behavior_at_beh,

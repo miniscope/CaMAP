@@ -103,6 +103,11 @@ class MazeDataset(BaseCaMAPDataset):
             behavior_timestamp_csv=self.behavior_timestamp_path,
             neural_timestamp_csv=self.neural_timestamp_path,
             bodypart=bcfg.bodypart,
+            behavior_frame_col=bcfg.timestamp_frame_col,
+            behavior_time_col=bcfg.timestamp_time_col,
+            neural_time_col=(
+                self.data_cfg.neural.timestamp_col if self.data_cfg.neural else "timestamp_first"
+            ),
             arm_max_distance=zd.arm_max_distance,
             min_confidence=zd.min_confidence,
             min_confidence_forbidden=zd.min_confidence_forbidden,
