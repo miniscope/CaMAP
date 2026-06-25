@@ -25,12 +25,14 @@ The **canonical neural-rate table** (`ds.canonical`) is the central artifact: on
 - `{trace_name}.zarr`: calcium traces (frames × units). Name set by `trace_name` in the analysis config (e.g. `C.zarr`, `C_lp.zarr`)
 - `A.zarr`: spatial footprints for cell contour overlay (optional)
 - `max_proj.zarr`: max projection image for visualization background (optional)
-- `neural.timestamp` CSV: neural frame timestamps (frame, timestamp_first, timestamp_last)
+- `neural.timestamp` CSV: neural frame timestamps (default sample-time column `timestamp_first`)
 
 **Behavior inputs:**
 - `behavior.position` CSV: animal position per frame (DeepLabCut format with bodypart columns)
-- `behavior.timestamp` CSV: behavior frame timestamps
+- `behavior.timestamp` CSV: behavior frame timestamps (default columns `frame_index`, `unix_time`)
 - `behavior.video` (optional): behavior video file used for the calibration overlay frame
+
+The timestamp CSV column names are configurable in the data config, so files with different headers don't need editing: set `neural.timestamp_col` for the neural sample-time column, and `behavior.timestamp_frame_col` / `behavior.timestamp_time_col` for the behavior frame-index and unix-time columns. The defaults match the column names above. Whatever you name them, the loader maps the behavior columns onto the canonical `frame_index` / `unix_time` used everywhere downstream (the neural sample-time column is read positionally, one row per neural frame), so the `canonical` table and all analysis are unaffected by the source header names.
 
 **Intermediate DataFrames** (generated during pipeline):
 - `canonical`: per-neural-frame table with `x, y, speed, [pos_1d, ...], s_unit_<id>...`. Single source of truth for all downstream analysis.
@@ -80,7 +82,7 @@ Saves a copy of the raw trajectory in `trajectory_raw`, then applies geometric c
 
 Requires both a `neural:` and a `behavior:` block — raises with a targeted message if either side is missing. Builds the canonical neural-rate table:
 
-1. Load neural timestamps (`timestamp_first` per neural frame), validate with Hampel filter, exclude anomalous frames.
+1. Load neural timestamps (the `neural.timestamp_col` column, default `timestamp_first`, per neural frame), validate with Hampel filter, exclude anomalous frames.
 2. **Arena**: linearly interpolate `(x, y)` from the behavior-rate trajectory onto neural timestamps, then compute speed at neural rate. **Maze**: the trajectory is already at neural rate (interpolation happened inside zone detection), so this step is a direct join.
 3. Stack the deconvolved per-unit spike trains (`S_list`) into `s_unit_<id>` columns.
 4. Drop neural frames with no behavior coverage (outside behavior time window).
@@ -94,7 +96,7 @@ Zone detection projects raw DLC `(x, y)` onto the maze graph **at the neural sam
 
 1. Load raw DLC `(x, y)` from `behavior_position.csv`.
 2. **Hampel jump removal** on the raw trajectory at behavior rate, using `zone_detection.hampel_window_frames` and `zone_detection.hampel_n_sigmas`.
-3. **Linearly interpolate** the cleaned `(x, y)` onto the neural timestamp grid (`timestamp_first` from `neural_timestamp.csv`).
+3. **Linearly interpolate** the cleaned `(x, y)` onto the neural timestamp grid (the `neural.timestamp_col` column, default `timestamp_first`, from `neural_timestamp.csv`).
 4. Compute per-zone soft-membership probability and run a state machine at the neural sample rate (`min_confidence`, `min_seconds_same`, `min_seconds_forbidden`, graph adjacency) to assign a zone label per neural frame.
 5. For arm-zone frames, project the cleaned `(x, y)` onto the arm polyline to get `arm_position` (0–1) and pinned point `(x_pinned, y_pinned)`.
 6. Write the resulting per-neural-frame table to the `zone_tracking` CSV with columns `x, y, x_pinned, y_pinned, zone, arm_position, neural_time` indexed by neural frame.
@@ -169,7 +171,7 @@ The pipeline flags and excludes problematic data rather than silently repairing 
 - Outliers from the local trend (Hampel filter, window=11, 3σ) → excluded
 - Residual backward jumps after Hampel → excluded
 - Large forward gaps (recording stalls, >1s or >10× median dt) → warned, NOT excluded (valid timestamps; interpolated positions within the gap may be unreliable)
-- Only `timestamp_first` is used; `timestamp_last` is ignored (occasionally noisy)
+- Only the configured sample-time column (`neural.timestamp_col`, default `timestamp_first`) is used; any end-of-exposure column (e.g. `timestamp_last`) is ignored (occasionally noisy)
 
 **Temporal alignment** (behavior ↔ neural):
 - Zero overlap between recordings → hard error
@@ -222,11 +224,14 @@ A per-session data config has two optional top-level blocks: `neural:` and `beha
 neural:
   path: path/to/neural
   timestamp: path/to/neural_timestamp.csv
+  # timestamp_col: timestamp_first      # neural sample-time column (default shown)
 behavior:
   type: arena                           # 'arena' for 2D open-field, 'maze' for 1D arm analysis
   fps: 20.0                             # Behavior camera sampling rate (Hz)
   position: path/to/behavior_position.csv
   timestamp: path/to/behavior_timestamp.csv
+  # timestamp_frame_col: frame_index    # behavior frame-index column (default shown)
+  # timestamp_time_col: unix_time       # behavior unix-time column (default shown)
   bodypart: LED                         # DLC bodypart name for position tracking
 ```
 :::
