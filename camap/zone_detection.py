@@ -518,7 +518,10 @@ def detect_zones_from_csv(
     )
 
     behavior_ts = pd.read_csv(behavior_timestamp_csv)
-    if behavior_frame_col not in behavior_ts.columns or behavior_time_col not in behavior_ts.columns:
+    if (
+        behavior_frame_col not in behavior_ts.columns
+        or behavior_time_col not in behavior_ts.columns
+    ):
         raise ValueError(
             f"behavior_timestamp_csv must have '{behavior_frame_col}' and "
             f"'{behavior_time_col}' columns. Got: {list(behavior_ts.columns)}"

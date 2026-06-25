@@ -357,7 +357,8 @@ class BaseBehaviorDataConfig(BaseModel):
     timestamp: str = Field(..., description="Path to behavior timestamp CSV.")
     timestamp_frame_col: str = Field(
         "frame_index",
-        description="Behavior timestamp CSV column for the frame index (merge key with the position CSV).",
+        description="Behavior timestamp CSV column for the frame index (merge key with the "
+        "position CSV).",
     )
     timestamp_time_col: str = Field(
         "unix_time",
