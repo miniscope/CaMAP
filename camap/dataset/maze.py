@@ -431,6 +431,7 @@ class MazeDataset(BaseCaMAPDataset):
             min_occupancy=scfg.min_occupancy,
             segment_bins=self.segment_bins,
             edges=edges_arr,
+            occupancy_mask=scfg.occupancy_mask,
         )
 
         self.x_edges = self.edges_1d

@@ -14,6 +14,7 @@ behavior:
   spatial_map_1d:
     bin_width_mm: 10
     min_occupancy: 0.05
+    occupancy_mask: smoothed  # 'smoothed' gates min_occupancy on Gaussian-smoothed occupancy (default); 'raw' = per-bin dwell
     spatial_sigma: 2
     n_shuffles: 1000
     random_seed: 42

@@ -347,6 +347,7 @@ class ArenaDataset(BaseCaMAPDataset):
             behavior_fps=self.data_cfg.behavior.fps,
             spatial_sigma=scfg.spatial_sigma,
             min_occupancy=scfg.min_occupancy,
+            occupancy_mask=scfg.occupancy_mask,
         )
         logger.info(
             "Occupancy map: %s, %d/%d valid bins",

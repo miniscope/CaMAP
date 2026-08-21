@@ -80,8 +80,14 @@ def test_compute_occupancy_map(assets_dir: Path) -> None:
     })
     trajectory = trajectory.dropna()
 
+    # Reference was generated with the legacy smoothed-occupancy mask.
     occupancy, valid_mask, x_edges, y_edges = compute_occupancy_map(
-        trajectory, bins=20, behavior_fps=20.0, spatial_sigma=1.0, min_occupancy=0.1
+        trajectory,
+        bins=20,
+        behavior_fps=20.0,
+        spatial_sigma=1.0,
+        min_occupancy=0.1,
+        occupancy_mask="smoothed",
     )
 
     np.testing.assert_allclose(occupancy, ref["occupancy"], rtol=1e-10)

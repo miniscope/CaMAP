@@ -59,6 +59,15 @@ class BaseSpatialMapConfig(BaseModel):
         ge=0.0,
         description="Minimum occupancy time (seconds) per bin.",
     )
+    occupancy_mask: Literal["raw", "smoothed"] = Field(
+        "smoothed",
+        description=(
+            "Which occupancy the min_occupancy threshold gates on: 'smoothed' "
+            "Gaussian-smoothed occupancy (default; legacy behavior, lets "
+            "never-visited bins pass via neighbor smoothing) or 'raw' per-bin "
+            "dwell time (excludes never-visited bins; typical in the literature)."
+        ),
+    )
     spatial_sigma: float = Field(
         ...,
         ge=0.0,
