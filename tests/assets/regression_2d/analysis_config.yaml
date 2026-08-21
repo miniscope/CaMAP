@@ -17,6 +17,7 @@ behavior:
   spatial_map_2d:
     bins: 50
     min_occupancy: 0.025
+    occupancy_mask: smoothed  # pin legacy mask so the saved reference stays valid
     spatial_sigma: 3
     n_shuffles: 100
     random_seed: 42

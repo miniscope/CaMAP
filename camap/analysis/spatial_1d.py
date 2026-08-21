@@ -96,6 +96,7 @@ def compute_occupancy_map_1d(
     pos_column: str = "pos_1d",
     segment_bins: list[int] | None = None,
     edges: np.ndarray | None = None,
+    occupancy_mask: str = "smoothed",
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute 1D occupancy histogram (raw).
 
@@ -117,12 +118,15 @@ def compute_occupancy_map_1d(
         downstream smoothing in the rate-map/SI path doesn't compound
         to sigma·sqrt(2).
     min_occupancy:
-        Minimum occupancy in seconds (checked against the smoothed
-        occupancy for the mask).
+        Minimum occupancy in seconds for a bin to count as valid.
     pos_column:
         Column name for position values.
     segment_bins:
         Bin boundary indices for per-segment smoothing.
+    occupancy_mask:
+        ``"raw"`` gates ``min_occupancy`` on raw per-bin occupancy
+        (typical); ``"smoothed"`` gates on the Gaussian-smoothed
+        occupancy (legacy), letting never-visited bins pass.
     edges:
         Explicit bin edges. When provided, these are used as-is (e.g.
         per-arm edges where boundaries land exactly on edges and bin
@@ -142,7 +146,7 @@ def compute_occupancy_map_1d(
     counts, _ = np.histogram(trajectory_df[pos_column], bins=edges)
     occupancy_time = counts.astype(float) * time_per_frame
 
-    if spatial_sigma > 0:
+    if occupancy_mask == "smoothed" and spatial_sigma > 0:
         occ_for_mask = gaussian_filter_normalized_1d(
             occupancy_time, sigma=spatial_sigma, segment_bins=segment_bins
         )
@@ -354,6 +358,7 @@ def compute_stability_score_1d(
     si_weight_mode: str = "amplitude",
     pos_column: str = "pos_1d",
     segment_bins: list[int] | None = None,
+    occupancy_mask: str = "smoothed",
 ) -> tuple[float, float, float, np.ndarray, np.ndarray, np.ndarray]:
     """Compute 1D split-half stability test.
 
@@ -415,10 +420,13 @@ def compute_stability_score_1d(
             return np.zeros_like(occupancy_time), np.zeros_like(valid_mask, dtype=bool)
         counts, _ = np.histogram(traj_half[pos_column], bins=edges)
         occ = counts.astype(float) * time_per_frame
-        occ_smooth = gaussian_filter_normalized_1d(
-            occ, sigma=spatial_sigma, segment_bins=segment_bins
-        )
-        mask = occ_smooth >= min_occupancy
+        if occupancy_mask == "smoothed" and spatial_sigma > 0:
+            occ_for_mask = gaussian_filter_normalized_1d(
+                occ, sigma=spatial_sigma, segment_bins=segment_bins
+            )
+        else:
+            occ_for_mask = occ
+        mask = occ_for_mask >= min_occupancy
         return occ, mask
 
     occ_first, valid_first = compute_half_occupancy(traj_first)
@@ -658,6 +666,7 @@ def compute_unit_analysis_1d(
                 si_weight_mode=scfg.si_weight_mode,
                 pos_column=pos_column,
                 segment_bins=segment_bins,
+                occupancy_mask=scfg.occupancy_mask,
             )
         stability_splits.append(
             {

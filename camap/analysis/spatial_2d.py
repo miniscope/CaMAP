@@ -86,6 +86,7 @@ def compute_occupancy_map(
     behavior_fps: float,
     spatial_sigma: float = 1.0,
     min_occupancy: float = 0.1,
+    occupancy_mask: str = "smoothed",
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute raw occupancy map from speed-filtered trajectory.
 
@@ -103,15 +104,19 @@ def compute_occupancy_map(
         is returned unsmoothed so downstream smoothing in
         :func:`compute_rate_map` etc. doesn't compound to sigma·sqrt(2).
     min_occupancy:
-        Minimum occupancy time in seconds (checked against the smoothed
-        occupancy for the mask).
+        Minimum occupancy time in seconds for a bin to count as valid.
+    occupancy_mask:
+        ``"raw"`` gates the ``min_occupancy`` threshold on the raw per-bin
+        occupancy (typical). ``"smoothed"`` gates on the Gaussian-smoothed
+        occupancy (legacy), which lets never-visited bins pass by borrowing
+        dwell time from neighbors.
 
     Returns
     -------
     tuple
         (occupancy_time, valid_mask, x_edges, y_edges) — ``occupancy_time``
-        is raw (seconds per bin); ``valid_mask`` comes from the smoothed
-        copy.
+        is always raw (seconds per bin); ``valid_mask`` gates on raw or
+        smoothed occupancy per ``occupancy_mask``.
     """
     x_edges = np.linspace(trajectory_df["x"].min(), trajectory_df["x"].max(), bins + 1)
     y_edges = np.linspace(trajectory_df["y"].min(), trajectory_df["y"].max(), bins + 1)
@@ -122,7 +127,7 @@ def compute_occupancy_map(
     )
     occupancy_time = occupancy_counts * time_per_frame
 
-    if spatial_sigma > 0:
+    if occupancy_mask == "smoothed" and spatial_sigma > 0:
         occ_for_mask = gaussian_filter_normalized(occupancy_time, sigma=spatial_sigma)
     else:
         occ_for_mask = occupancy_time
@@ -458,6 +463,7 @@ def compute_stability_score(
     random_seed: int | None = None,
     min_shift_seconds: float = 0.0,
     si_weight_mode: str = "amplitude",
+    occupancy_mask: str = "smoothed",
 ) -> tuple[float, float, float, np.ndarray, np.ndarray, np.ndarray]:
     """Compute stability score by comparing rate maps from split data.
 
@@ -575,8 +581,11 @@ def compute_stability_score(
             return occ, mask
         counts, _, _ = np.histogram2d(traj_half["x"], traj_half["y"], bins=[x_edges, y_edges])
         occ = counts * time_per_frame
-        occ_smooth = gaussian_filter_normalized(occ, sigma=spatial_sigma)
-        mask = occ_smooth >= min_occupancy
+        if occupancy_mask == "smoothed" and spatial_sigma > 0:
+            occ_for_mask = gaussian_filter_normalized(occ, sigma=spatial_sigma)
+        else:
+            occ_for_mask = occ
+        mask = occ_for_mask >= min_occupancy
         return occ, mask
 
     occ_first, valid_first = compute_half_occupancy(traj_first)
@@ -867,6 +876,7 @@ def compute_unit_analysis(
                 random_seed=random_seed,
                 min_shift_seconds=scfg.min_shift_seconds,
                 si_weight_mode=scfg.si_weight_mode,
+                occupancy_mask=scfg.occupancy_mask,
             )
         stability_splits.append(
             {
