@@ -5,6 +5,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 While the major version is `0.x`, breaking API changes may land in any release;
 treat the package as alpha-stage until `1.0`.
 
+## [0.1.7] — Unreleased
+
+### Added
+
+- `occupancy_mask` option (`raw` or `smoothed`, default `smoothed`) in the
+  `spatial_map_1d` / `spatial_map_2d` config sections, selecting whether
+  `min_occupancy` gates on raw per-bin dwell time or on the smoothed
+  occupancy map. The default keeps existing bundle outputs unchanged.
+- `BaseCaMAPDataset.occupancy_coverage()` reports the percentage of
+  spatial bins the animal visited and the percentage meeting the
+  `min_occupancy` criterion, as two separate values.
+- Docs: a [Demo](https://miniscope.github.io/CaMAP/demo.html) page with an
+  end-to-end `camap analysis` run on the bundled
+  `tests/assets/regression_2d` fixture, the expected output files, and
+  measured install and run times.
+- README: short "System requirements", "Install", and "Demo" sections
+  pointing at PyPI and the docs; the inline Python example is replaced by
+  the Demo and Quickstart links.
+
+### Fixed
+
+- `load()` now raises when the neural trace frame count does not match the
+  number of rows in the neural timestamp CSV. Previously the mismatch
+  silently mis-registered every event against behavior.
+- Maze `save_bundle()` skips `global_pvo_matrix.pdf` with a warning when the
+  dataset has no place cells, instead of logging a `ValueError` traceback.
+- Maze results notebook: `behavior_fps` is read from `data_cfg.behavior.fps`
+  (the attribute moved in 0.1.6).
+
+## [0.1.6] — 2026-06-25
+
+Version 0.1.5 was skipped; there is no such release.
+
+### Added
+
+- Configurable timestamp CSV column names in the data config:
+  `neural.timestamp_col` (default `timestamp_first`),
+  `behavior.timestamp_frame_col` (default `frame_index`) and
+  `behavior.timestamp_time_col` (default `unix_time`). Loaders,
+  `detect-zones`, and the maze pipeline honor them and rename the columns
+  to the canonical names internally, so downstream tables are unchanged.
+  The 2D regression test now runs with both default and renamed columns.
+- Arena results notebook: rate-map gallery of sampled place cells with a
+  shared color scale.
+
 ## [0.1.4] — 2026-06-08
 
 ### Changed

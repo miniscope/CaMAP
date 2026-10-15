@@ -11,6 +11,7 @@ Extracts neural events from calcium traces, aligns them with animal behavior, an
 
 installation
 quickstart
+demo
 ```
 
 ## User Guide
