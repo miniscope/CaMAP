@@ -47,15 +47,27 @@ def main() -> None:
         print(f"  Saved: {bundle_path}")
 
         s = ds.summary()
-        rows.append({"dataset": name, **s})
+        cov = ds.occupancy_coverage()
+        rows.append({"dataset": name, **s, **cov})
         print(
             f"  Place cells: {s['n_place_cells']}/{s['n_total']} "
-            f"({s['n_sig']} sig, {s['n_stable']} stable)"
+            f"({s['n_sig']} sig, {s['n_stable']} stable); "
+            f"coverage: {cov['coverage_visited_pct']}% visited, "
+            f"{cov['coverage_criterion_pct']}% above min_occupancy"
         )
 
     df = pd.DataFrame(rows)
     print(f"\n{'=' * 60}")
-    print(df[["dataset", "n_total", "n_sig", "n_stable", "n_place_cells"]].to_string(index=False))
+    cols = [
+        "dataset",
+        "n_total",
+        "n_sig",
+        "n_stable",
+        "n_place_cells",
+        "coverage_visited_pct",
+        "coverage_criterion_pct",
+    ]
+    print(df[cols].to_string(index=False))
 
 
 if __name__ == "__main__":

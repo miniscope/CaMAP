@@ -632,6 +632,32 @@ class BaseCaMAPDataset(abc.ABC):
             "pct_place_cells": pct(n_place_cells),
         }
 
+    def occupancy_coverage(self) -> dict:
+        """Spatial coverage of the occupancy map, reported two ways.
+
+        The two are exported separately so the distinction is explicit and the
+        choice of which to cite is left to the writing, not baked into the data.
+
+        Returns
+        -------
+        dict
+            ``coverage_visited_pct``: percentage of spatial bins the animal
+            entered (raw occupancy > 0).
+            ``coverage_criterion_pct``: percentage of bins meeting the
+            ``min_occupancy`` criterion (i.e. in ``valid_mask`` — the bins
+            actually used for rate maps and place fields). Depends on
+            ``min_occupancy`` and ``occupancy_mask``.
+        """
+        occ = self.occupancy_time
+        if occ is None or occ.size == 0:
+            return {"coverage_visited_pct": float("nan"), "coverage_criterion_pct": float("nan")}
+        visited = round(100 * float((occ > 0).sum()) / occ.size, 1)
+        if self.valid_mask is not None and self.valid_mask.size:
+            criterion = round(100 * float(self.valid_mask.sum()) / self.valid_mask.size, 1)
+        else:
+            criterion = float("nan")
+        return {"coverage_visited_pct": visited, "coverage_criterion_pct": criterion}
+
     def save_bundle(self, path: str | Path, *, save_figures: bool = True) -> Path:
         """Save all analysis results to a portable ``.camap`` directory.
 
