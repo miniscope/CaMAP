@@ -645,11 +645,17 @@ class MazeDataset(BaseCaMAPDataset):
                     saved,
                 )
 
-                def _pvo_fig() -> Any:
-                    pvo_results = compute_dataset_arm_pvo(self, use_place_cells=True)
-                    return plot_arm_pvo_grid(pvo_results, self.effective_arm_order)
+                if self.place_cells():
 
-                _save_pdf(figures_dir, "global_pvo_matrix.pdf", _pvo_fig, saved)
+                    def _pvo_fig() -> Any:
+                        pvo_results = compute_dataset_arm_pvo(self, use_place_cells=True)
+                        return plot_arm_pvo_grid(pvo_results, self.effective_arm_order)
+
+                    _save_pdf(figures_dir, "global_pvo_matrix.pdf", _pvo_fig, saved)
+                else:
+                    logger.warning(
+                        "Skipping global_pvo_matrix.pdf: no place cells in this dataset."
+                    )
 
             place_cell_results = self.place_cells()
             if place_cell_results and self.trajectory_1d is not None:

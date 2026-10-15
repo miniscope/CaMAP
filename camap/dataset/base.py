@@ -412,6 +412,22 @@ class BaseCaMAPDataset(abc.ABC):
             )
         neural_time = ts_df[time_col].to_numpy()
 
+        # Guard: the trace and its timestamp CSV must have one row per neural
+        # frame. A mismatch (e.g. a MinIAN output segmented from a different
+        # frame range than the timestamp CSV covers) silently mis-registers
+        # every event against behavior and yields scrambled rate maps, so fail
+        # loudly here instead.
+        if self.traces is not None:
+            n_frames = int(self.traces.sizes["frame"])
+            if n_frames != len(ts_df):
+                raise ValueError(
+                    f"Neural trace has {n_frames} frames but timestamp CSV "
+                    f"{self.neural_timestamp_path} has {len(ts_df)} rows. They must "
+                    f"match (one timestamp per neural frame); a mismatch mis-aligns "
+                    f"neural events against behavior. Ensure the neural output and "
+                    f"the timestamp CSV cover the same frame range."
+                )
+
         # Run the same validation that match_events will run later;
         # log results now so the user sees quality before deconvolution.
         clean_time, _ = validate_neural_timestamps(neural_time)
@@ -615,6 +631,32 @@ class BaseCaMAPDataset(abc.ABC):
             "n_place_cells": n_place_cells,
             "pct_place_cells": pct(n_place_cells),
         }
+
+    def occupancy_coverage(self) -> dict:
+        """Spatial coverage of the occupancy map, reported two ways.
+
+        The two are exported separately so the distinction is explicit and the
+        choice of which to cite is left to the writing, not baked into the data.
+
+        Returns
+        -------
+        dict
+            ``coverage_visited_pct``: percentage of spatial bins the animal
+            entered (raw occupancy > 0).
+            ``coverage_criterion_pct``: percentage of bins meeting the
+            ``min_occupancy`` criterion (i.e. in ``valid_mask`` — the bins
+            actually used for rate maps and place fields). Depends on
+            ``min_occupancy`` and ``occupancy_mask``.
+        """
+        occ = self.occupancy_time
+        if occ is None or occ.size == 0:
+            return {"coverage_visited_pct": float("nan"), "coverage_criterion_pct": float("nan")}
+        visited = round(100 * float((occ > 0).sum()) / occ.size, 1)
+        if self.valid_mask is not None and self.valid_mask.size:
+            criterion = round(100 * float(self.valid_mask.sum()) / self.valid_mask.size, 1)
+        else:
+            criterion = float("nan")
+        return {"coverage_visited_pct": visited, "coverage_criterion_pct": criterion}
 
     def save_bundle(self, path: str | Path, *, save_figures: bool = True) -> Path:
         """Save all analysis results to a portable ``.camap`` directory.

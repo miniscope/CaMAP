@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/miniscope/CaMAP/actions/workflows/test.yml/badge.svg)](https://github.com/miniscope/CaMAP/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/camap)](https://pypi.org/project/camap/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/camap)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Calcium imaging mapping and analysis pipeline. Extracts neural events from
@@ -11,36 +12,45 @@ place-cell classification.
 
 > **Alpha-stage** in `0.x` — APIs may change between minor releases.
 
+## System requirements
+
+Supported operating systems and Python versions are shown on
+[PyPI](https://pypi.org/project/camap/), and dependencies are listed in
+`pyproject.toml`. No non-standard hardware is required.
+
 ## Install
 
 ```bash
 pip install camap
 ```
 
+Or clone the repository for the demo data and development:
+
+```bash
+git clone https://github.com/miniscope/CaMAP.git
+cd CaMAP
+pip install .
+```
+
 `oasis-deconv` is required for the deconvolution step; see
 [Installation](https://miniscope.github.io/CaMAP/installation.html) for the
-recommended install path.
+recommended install path. A typical install takes below a few minutes on a
+normal desktop computer.
 
-## Minimum example
+## Demo
 
-```python
-from camap.dataset import BaseCaMAPDataset
-
-ds = BaseCaMAPDataset.from_yaml("config.yaml", "data_paths.yaml")
-ds.load()
-ds.preprocess_behavior()
-ds.deconvolve()
-ds.match_events()
-ds.compute_occupancy()
-ds.analyze_units()
-ds.save_bundle("output/session_name")
-```
+See the [Demo](https://miniscope.github.io/CaMAP/demo.html) for a
+functionality demo on the small sample data included in `tests/assets`.
 
 ## Documentation
 
 - [Installation](https://miniscope.github.io/CaMAP/installation.html)
 - [Quickstart](https://miniscope.github.io/CaMAP/quickstart.html)
+- [Demo](https://miniscope.github.io/CaMAP/demo.html)
 - [Pipeline Details](https://miniscope.github.io/CaMAP/pipeline.html)
+
+To run on your own data, see
+[Quickstart](https://miniscope.github.io/CaMAP/quickstart.html).
 
 ## License
 
